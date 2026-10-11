@@ -5,6 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
 import urllib.parse
+from datetime import datetime
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
@@ -111,6 +112,36 @@ div[class*="viewerBadge"] {display: none !important;}
 @keyframes authorPulse {
     0% { opacity: 0.85; transform: translateY(0); }
     100% { opacity: 1; transform: translateY(-4px); }
+}
+
+.header-info-strip {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.header-badge {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: #00e676;
+    box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+}
+
+.header-phone {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: #58a6ff;
+    box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+    text-decoration: none;
 }
 
 /* Market Pulse Counter Strip */
@@ -381,12 +412,17 @@ if ticker_html_items:
     """, unsafe_allow_html=True)
 
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
+current_live_time = datetime.now().strftime("%d %b %Y, %I:%M:%S %p")
 
 st.markdown(f"""
 <div class="logo-header-container">
     <img src="{logo_url}" class="logo-img" alt="PSX Logo">
     <div class="animated-title">PSX Trading Wizards</div>
     <div class="animated-author">By Ijaz Sardar</div>
+    <div class="header-info-strip">
+        <div class="header-badge">🕒 {current_live_time}</div>
+        <a href="tel:+923007581169" class="header-phone">📞 +92 300 7581169</a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
