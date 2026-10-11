@@ -10,7 +10,7 @@ st.markdown("""
 .stApp { background-color: #0d1117; color: #ffffff; }
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
 .glow-circle { 
-    width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; background-color: #161b22; margin-bottom: 10px;
+    width: 130px; height: 130px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; background-color: #161b22; margin-bottom: 10px;
     animation: pulseGlow 2s infinite;
 }
 @keyframes pulseGlow {
@@ -18,12 +18,12 @@ st.markdown("""
     50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 145, 0, 0.8); }
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
-.signal-title { font-size: 28px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 15px; }
+.signal-title { font-size: 26px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 12px; }
 .metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-.metric-val { color: #ffffff !important; font-size: 20px !important; font-weight: 800 !important; }
+.metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Hide Streamlit footer, deployment buttons and branding badges */
+/* Hide Streamlit branding and footer completely */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 .stDeployButton {display: none !important;}
@@ -32,12 +32,11 @@ div[data-testid="stDecoration"] {display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 div[class*="streamlitLogo"] {display: none !important;}
 div[class*="hosted-with-streamlit"] {display: none !important;}
-div[class*="viewerBadge"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h2 style='text-align: center; color: #58a6ff;'>📈 PSX Trading Wizards</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8b949e; font-size: 14px;'>By Ijaz Sardar</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e; font-size: 13px;'>By Ijaz Sardar</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 symbols = {
@@ -84,25 +83,29 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Main screen controls for easy mobile navigation
+# Main screen top controls for instant mobile navigation
 col_sel1, col_sel2 = st.columns(2)
 with col_sel1:
     sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
 with col_sel2:
-    sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "1 Hour"])
+    sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "1 Hour", "4 Hours", "15 Minutes", "5 Minutes", "1 Minute"])
 
 ticker = symbols[sel_name]
 
 tf_map = {
     "Daily (1D)": ("6mo", "1d"),
     "Weekly (1W)": ("2y", "1wk"),
-    "1 Hour": ("5d", "60m")
+    "4 Hours": ("60d", "60m"),
+    "1 Hour": ("30d", "60m"),
+    "15 Minutes": ("10d", "15m"),
+    "5 Minutes": ("5d", "5m"),
+    "1 Minute": ("1d", "1m")
 }
 period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h4 style='text-align: center; color: #58a6ff; margin-top: 10px;'>Analyzing: {sel_name} ({sel_tf})</h4>", unsafe_allow_html=True)
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def load_data(sym, p, i):
     df_test = None
     try:
@@ -110,16 +113,16 @@ def load_data(sym, p, i):
     except:
         pass
         
-    if df_test is None or df_test.empty or len(df_test) < 5:
+    if df_test is None or df_test.empty or len(df_test) < 3:
         try:
             df_test = yf.download("^KS100", period="6mo", interval="1d", progress=False)
         except:
             pass
             
-    if df_test is None or df_test.empty or len(df_test) < 5:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D')
+    if df_test is None or df_test.empty or len(df_test) < 3:
+        dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         np.random.seed(42)
-        prices = 1000 + np.cumsum(np.random.randn(30) * 15)
+        prices = 1000 + np.cumsum(np.random.randn(50) * 15)
         df_test = pd.DataFrame({'Close': prices}, index=dates)
         
     return df_test
@@ -134,29 +137,54 @@ if df is not None and not df.empty:
     if isinstance(close, pd.DataFrame):
         close = close.iloc[:, 0]
     
+    # RSI Calculation
     delta = close.diff()
     gain = delta.where(delta > 0, 0).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rsi = 100 - (100 / (1 + (gain / loss)))
     curr_rsi = float(rsi.iloc[-1]) if not rsi.empty and not pd.isna(rsi.iloc[-1]) else 50.0
     
+    # EMA Calculation
     ema = close.ewm(span=min(50, len(close)), adjust=False).mean()
     
+    # MACD Calculation
     exp1 = close.ewm(span=12, adjust=False).mean()
     exp2 = close.ewm(span=26, adjust=False).mean()
     macd = exp1 - exp2
     sig_line = macd.ewm(span=9, adjust=False).mean()
     
+    # Bollinger Bands Calculation (20 period, 2 std dev)
+    bb_period = min(20, len(close))
+    bb_sma = close.rolling(bb_period).mean()
+    bb_std = close.rolling(bb_period).std()
+    bb_upper = bb_sma + (bb_std * 2)
+    bb_lower = bb_sma - (bb_std * 2)
+    
     price = float(close.iloc[-1])
     m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
     s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
     
-    if curr_rsi < 45 and m_val > s_val:
+    b_upper = float(bb_upper.iloc[-1]) if not bb_upper.empty and not pd.isna(bb_upper.iloc[-1]) else price * 1.05
+    b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
+    b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
+    
+    # Signal Logic combining RSI, MACD & Bollinger Bands
+    if curr_rsi < 42 and price <= b_lower * 1.01:
+        sig = "STRONG BUY"
+        col = "#00e676"
+        icon = "🚀"
+        glow = "0 0 35px rgba(0, 230, 118, 0.8)"
+    elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
         col = "#00e676"
         icon = "↗"
         glow = "0 0 35px rgba(0, 230, 118, 0.8)"
-    elif curr_rsi > 65 and m_val < s_val:
+    elif curr_rsi > 65 and price >= b_upper * 0.99:
+        sig = "STRONG SELL"
+        col = "#ff1744"
+        icon = "⚠️"
+        glow = "0 0 35px rgba(255, 23, 68, 0.8)"
+    elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"
         icon = "↘"
@@ -192,9 +220,13 @@ if df is not None and not df.empty:
     c3.markdown(card3, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.subheader("📊 Technical Indicators Summary")
+    st.subheader("📊 Technical Indicators & Bollinger Bands")
     ema_val = float(ema.iloc[-1]) if not ema.empty and not pd.isna(ema.iloc[-1]) else price
+    
     st.write(f"- **EMA 50:** {ema_val:,.2f}")
     st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
+    st.write(f"- **Bollinger Upper Band:** {b_upper:,.2f}")
+    st.write(f"- **Bollinger Middle (SMA):** {b_mid:,.2f}")
+    st.write(f"- **Bollinger Lower Band:** {b_lower:,.2f}")
 else:
-    st.warning("⚠️ Market data temporarily unavailable.")
+    st.warning("⚠️ Market data temporarily unavailable. Please select another share or timeframe.")
