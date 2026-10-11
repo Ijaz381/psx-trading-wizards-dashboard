@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
@@ -97,7 +98,6 @@ header {visibility: hidden !important; display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-# Custom Logo URL Provided
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
 
 st.markdown(f"""
@@ -154,7 +154,7 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Main Screen Selection Menus for Mobile Friendly UI
+# Main Screen Selection Menus
 sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
 sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "4 Hours", "1 Hour", "15 Minutes", "5 Minutes", "1 Minute"])
 
@@ -192,7 +192,12 @@ def load_data(sym, p, i):
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         np.random.seed(42)
         prices = 1000 + np.cumsum(np.random.randn(50) * 15)
-        df_test = pd.DataFrame({'Close': prices}, index=dates)
+        df_test = pd.DataFrame({
+            'Open': prices - np.random.randn(50)*2,
+            'High': prices + np.abs(np.random.randn(50)*5),
+            'Low': prices - np.abs(np.random.randn(50)*5),
+            'Close': prices
+        }, index=dates)
         
     return df_test
 
@@ -289,7 +294,73 @@ if df is not None and not df.empty:
     c3.markdown(card3, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.subheader("📊 Technical Indicators & Bollinger Bands")
+    st.subheader(f"📈 {sel_name} Live Price Chart")
+    
+    fig = go.Figure()
+    
+    # Check if Open, High, Low columns exist for Candlestick chart
+    has_ohlc = all(col in df.columns for col in ['Open', 'High', 'Low', 'Close'])
+    
+    if has_ohlc:
+        fig.add_trace(go.Candlestick(
+            x=df.index,
+            open=df['Open'],
+            high=df['High'],
+            low=df['Low'],
+            close=df['Close'],
+            name='Price',
+            increasing_line_color='#00e676',
+            decreasing_line_color='#ff1744'
+        ))
+    else:
+        fig.add_trace(go.Scatter(
+            x=df.index,
+            y=close,
+            mode='lines',
+            name='Close Price',
+            line=dict(color='#00e676', width=2)
+        ))
+        
+    # Add EMA 50 Overlay
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=ema,
+        mode='lines',
+        name='EMA 50',
+        line=dict(color='#ffd600', width=1.5, dash='dash')
+    ))
+    
+    # Add Bollinger Upper & Lower Bands
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=bb_upper,
+        mode='lines',
+        name='BB Upper',
+        line=dict(color='rgba(88, 166, 255, 0.5)', width=1)
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=bb_lower,
+        mode='lines',
+        name='BB Lower',
+        line=dict(color='rgba(88, 166, 255, 0.5)', width=1)
+    ))
+
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="#0d1117",
+        plot_bgcolor="#161b22",
+        margin=dict(l=10, r=10, t=30, b=10),
+        height=400,
+        xaxis_rangeslider_visible=False,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("📊 Technical Indicators Overview")
     ema_val = float(ema.iloc[-1]) if not ema.empty and not pd.isna(ema.iloc[-1]) else price
     
     st.write(f"- **EMA 50:** {ema_val:,.2f}")
