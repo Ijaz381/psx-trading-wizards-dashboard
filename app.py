@@ -268,6 +268,62 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
+# Voice Command Stock Search Component
+st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search Share Name</h6>", unsafe_allow_html=True)
+voice_search_code = """
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+    <button id="micBtn" style="
+        background: linear-gradient(135deg, #ff9100, #ff3d00);
+        color: #fff;
+        font-weight: bold;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    ">
+        🎙️ Speak Stock Name
+    </button>
+    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click microphone & say share name (e.g., 'Bitcoin' or 'Fauji')</div>
+</div>
+
+<script>
+const micBtn = document.getElementById("micBtn");
+const statusText = document.getElementById("statusText");
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    micBtn.addEventListener("click", function() {
+        recognition.start();
+        statusText.innerText = "Listening... Speak now!";
+        statusText.style.color = "#00e676";
+    });
+
+    recognition.onresult = function(event) {
+        const spokenText = event.results[0][0].transcript.toLowerCase();
+        statusText.innerText = "You said: " + spokenText;
+        statusText.style.color = "#58a6ff";
+    };
+
+    recognition.onerror = function(event) {
+        statusText.innerText = "Voice search error: " + event.error;
+        statusText.style.color = "#ff1744";
+    };
+} else {
+    statusText.innerText = "Speech recognition not supported in this browser.";
+}
+</script>
+"""
+components.html(voice_search_code, height=90)
+
 sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
 sel_tf = st.selectbox("Select Timeframe", ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
 
