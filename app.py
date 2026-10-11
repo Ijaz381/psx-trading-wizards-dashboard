@@ -439,7 +439,7 @@ st.markdown(f"""
     <div class="animated-author">By Ijaz Sardar</div>
     <div class="header-info-strip">
         <div class="header-badge">
-""")
+""", unsafe_allow_html=True)
 components.html(clock_component_code, height=30)
 st.markdown(f"""
         </div>
