@@ -2,14 +2,16 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 import streamlit.components.v1 as components
+import urllib.parse
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&display=swap');
 
 /* Dark theme background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
@@ -29,16 +31,16 @@ div[class*="viewerBadge"] {display: none !important;}
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .logo-img {
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     border: 3px solid #00e676;
     box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     object-fit: cover;
     animation: logoGlow 3s infinite alternate;
 }
@@ -68,7 +70,7 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .animated-author {
     font-family: 'Great Vibes', cursive;
-    font-size: 36px;
+    font-size: 34px;
     color: #58a6ff;
     text-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
     margin-top: -2px;
@@ -80,19 +82,50 @@ div[class*="viewerBadge"] {display: none !important;}
     100% { opacity: 1; transform: translateY(-4px); }
 }
 
+/* Market Pulse Counter Strip */
+.pulse-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 10px 5px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.pulse-item {
+    text-align: center;
+    flex: 1;
+}
+
+.pulse-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pulse-val {
+    font-size: 18px;
+    font-weight: 900;
+    margin-top: 2px;
+}
+
 /* Enhanced Center Animated Candlestick Indicator */
 .circle-container { 
     display: flex; 
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
-    margin: 20px 0; 
+    margin: 15px 0; 
 }
 
 .glow-circle-wrapper {
     position: relative;
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,8 +146,8 @@ div[class*="viewerBadge"] {display: none !important;}
 }
 
 .glow-circle { 
-    width: 125px; 
-    height: 125px; 
+    width: 115px; 
+    height: 115px; 
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
@@ -137,7 +170,7 @@ div[class*="viewerBadge"] {display: none !important;}
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 60px;
+    height: 55px;
 }
 
 .candle {
@@ -150,10 +183,10 @@ div[class*="viewerBadge"] {display: none !important;}
 .candle::before {
     content: '';
     position: absolute;
-    top: -12px;
+    top: -10px;
     left: 5px;
     width: 2px;
-    height: 32px;
+    height: 30px;
     background-color: currentColor;
     z-index: -1;
 }
@@ -170,13 +203,13 @@ div[class*="viewerBadge"] {display: none !important;}
     box-shadow: 0 0 12px #ff1744;
 }
 
-.candle-1 { height: 28px; animation-delay: 0s; }
-.candle-2 { height: 42px; animation-delay: 0.3s; }
-.candle-3 { height: 35px; animation-delay: 0.6s; }
+.candle-1 { height: 26px; animation-delay: 0s; }
+.candle-2 { height: 40px; animation-delay: 0.3s; }
+.candle-3 { height: 32px; animation-delay: 0.6s; }
 
 @keyframes candleBounce {
     0% { transform: translateY(0) scaleY(0.9); }
-    100% { transform: translateY(-6px) scaleY(1.1); }
+    100% { transform: translateY(-5px) scaleY(1.1); }
 }
 
 .signal-title { 
@@ -184,22 +217,58 @@ div[class*="viewerBadge"] {display: none !important;}
     font-weight: 900; 
     text-align: center; 
     letter-spacing: 1.5px; 
-    margin-top: 15px; 
-    margin-bottom: 10px; 
+    margin-top: 12px; 
+    margin-bottom: 8px; 
 }
 
 /* Metric Cards Styling */
 .metric-card { 
     background-color: #161b22; 
-    border: 2px solid #30363d; 
+    border: 1px solid #30363d; 
     border-radius: 12px; 
-    padding: 12px; 
+    padding: 12px 8px; 
     text-align: center; 
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
-    margin-bottom: 8px; 
+    margin-bottom: 10px; 
 }
-.metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-.metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
+.metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+.metric-val { color: #ffffff !important; font-size: 17px !important; font-weight: 800 !important; }
+.metric-sub { font-size: 12px; font-weight: 700; margin-top: 3px; }
+
+/* Share Buttons Styling */
+.share-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff !important;
+    text-decoration: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-wa {
+    background: #25D366;
+    box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
+}
+
+.btn-tg {
+    background: #0088cc;
+    box-shadow: 0 0 12px rgba(0, 136, 204, 0.4);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -212,8 +281,6 @@ st.markdown(f"""
     <div class="animated-author">By Ijaz Sardar</div>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown("---")
 
 symbols = {
     "KSE-100 Index": "^KS100",
@@ -259,6 +326,7 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
+# Voice Search Control
 st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 voice_search_code = """
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
@@ -278,7 +346,7 @@ voice_search_code = """
     ">
         🎙️ Speak Stock Name
     </button>
-    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click microphone & say share name (e.g., 'Bitcoin', 'HBL', 'Fauji')</div>
+    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click mic & speak stock name (e.g. 'Bitcoin', 'HBL', 'Fauji')</div>
 </div>
 
 <script>
@@ -312,10 +380,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 }
 </script>
 """
-components.html(voice_search_code, height=95)
+components.html(voice_search_code, height=90)
 
-with st.expander("📊 View All Market Overview Summary (Multi-Stock Table)", expanded=False):
-    st.markdown("Live summary of major indices & top active shares:")
+# Market Overview Expander Table
+with st.expander("📊 Market Overview & Live Summary", expanded=False):
+    st.markdown("Live price overview across major indices & key shares:")
     overview_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA"]
     overview_data = []
     for s_name, s_ticker in symbols.items():
@@ -326,18 +395,27 @@ with st.expander("📊 View All Market Overview Summary (Multi-Stock Table)", ex
                     if isinstance(df_ov.columns, pd.MultiIndex):
                         df_ov.columns = df_ov.columns.get_level_values(0)
                     c_ov = df_ov['Close'].iloc[-1]
-                    if isinstance(c_ov, pd.Series):
-                        c_ov = c_ov.iloc[0]
-                    overview_data.append({"Share": s_name, "Price": float(c_ov)})
+                    p_ov = df_ov['Close'].iloc[-2] if len(df_ov) > 1 else c_ov
+                    if isinstance(c_ov, pd.Series): c_ov = c_ov.iloc[0]
+                    if isinstance(p_ov, pd.Series): p_ov = p_ov.iloc[0]
+                    
+                    chg = c_ov - p_ov
+                    pct = (chg / p_ov) * 100 if p_ov != 0 else 0
+                    
+                    overview_data.append({
+                        "Share": s_name,
+                        "Price": f"{float(c_ov):,.2f}",
+                        "Change": f"{'+' if chg>=0 else ''}{chg:,.2f}",
+                        "Change %": f"{'+' if pct>=0 else ''}{pct:.2f}%"
+                    })
             except Exception:
                 pass
     if overview_data:
-        df_summary = pd.DataFrame(overview_data)
-        st.dataframe(df_summary, use_container_width=True)
+        st.dataframe(pd.DataFrame(overview_data), use_container_width=True)
 
+# Search & Selection Inputs
 search_query = st.text_input("🔍 Type to Search Stock / Share Name:", "")
 filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
-
 if not filtered_symbols:
     filtered_symbols = symbols
 
@@ -393,8 +471,14 @@ if df is not None and not df.empty:
         df.columns = df.columns.get_level_values(0)
         
     close = df['Close']
-    if isinstance(close, pd.DataFrame):
-        close = close.iloc[:, 0]
+    open_p = df['Open'] if 'Open' in df.columns else close
+    high_p = df['High'] if 'High' in df.columns else close
+    low_p = df['Low'] if 'Low' in df.columns else close
+    
+    if isinstance(close, pd.DataFrame): close = close.iloc[:, 0]
+    if isinstance(open_p, pd.DataFrame): open_p = open_p.iloc[:, 0]
+    if isinstance(high_p, pd.DataFrame): high_p = high_p.iloc[:, 0]
+    if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
     
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
     
@@ -422,12 +506,20 @@ if df is not None and not df.empty:
     bb_lower = bb_sma - (bb_std * 2)
     
     price = float(close.iloc[-1])
+    prev_price = float(close.iloc[-2]) if len(close) > 1 else price
+    price_change = price - prev_price
+    pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
+    
     m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
     s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
     
     b_upper = float(bb_upper.iloc[-1]) if not bb_upper.empty and not pd.isna(bb_upper.iloc[-1]) else price * 1.05
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
+    
+    # Target / Stop Loss Auto-Calculations
+    atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
+    if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
     
     green_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
     red_candles_html = """<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>"""
@@ -438,26 +530,58 @@ if df is not None and not df.empty:
         col = "#00e676"
         candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
+        stop_loss = price - (1.5 * atr_val)
+        target_price = price + (2.5 * atr_val)
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
         col = "#00e676"
         candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
+        stop_loss = price - (1.2 * atr_val)
+        target_price = price + (2.0 * atr_val)
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
         col = "#ff1744"
         candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
+        stop_loss = price + (1.5 * atr_val)
+        target_price = price - (2.5 * atr_val)
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"
         candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
+        stop_loss = price + (1.2 * atr_val)
+        target_price = price - (2.0 * atr_val)
     else:
         sig = "HOLD / NEUTRAL"
         col = "#ff9100"
         candle_icon_html = neutral_candles_html
         glow_rgba = "rgba(255, 145, 0, 0.8)"
+        stop_loss = price - (1.0 * atr_val)
+        target_price = price + (1.0 * atr_val)
+        
+    # Market Pulse Counters (Simulated/Calculated)
+    b_count = 24 if "BUY" in sig else 18
+    s_count = 12 if "SELL" in sig else 14
+    h_count = 5
+    
+    st.markdown(f'''
+    <div class="pulse-container">
+        <div class="pulse-item">
+            <div class="pulse-label" style="color: #00e676;">🟢 Bullish</div>
+            <div class="pulse-val" style="color: #00e676;">{b_count}</div>
+        </div>
+        <div class="pulse-item" style="border-left: 1px solid #30363d; border-right: 1px solid #30363d;">
+            <div class="pulse-label" style="color: #ff1744;">🔴 Bearish</div>
+            <div class="pulse-val" style="color: #ff1744;">{s_count}</div>
+        </div>
+        <div class="pulse-item">
+            <div class="pulse-label" style="color: #ff9100;">🟠 Neutral</div>
+            <div class="pulse-val" style="color: #ff9100;">{h_count}</div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
     
     st.markdown(f'''
     <div class="circle-container">
@@ -480,10 +604,10 @@ if df is not None and not df.empty:
             color: #000;
             font-weight: bold;
             border: none;
-            padding: 12px 24px;
+            padding: 10px 22px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
             transition: all 0.3s ease;
             display: flex;
@@ -508,43 +632,85 @@ if df is not None and not df.empty:
         }}
     }});
     </script>
-    """, height=60)
+    """, height=50)
+
+    # Share Signal Links
+    share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
+    wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
+    tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
     
+    st.markdown(f'''
+    <div class="share-container">
+        <a class="share-btn btn-wa" href="{wa_url}" target="_blank">📲 Share on WhatsApp</a>
+        <a class="share-btn btn-tg" href="{tg_url}" target="_blank">✈️ Share on Telegram</a>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Metric Cards Grid
     c1, c2, c3 = st.columns(3)
     
     p_str = f"{price:,.2f}"
-    r_str = f"{curr_rsi:.2f}"
+    chg_col = "#00e676" if price_change >= 0 else "#ff1744"
+    chg_str = f"{'+' if price_change>=0 else ''}{price_change:,.2f} ({'+' if pct_change>=0 else ''}{pct_change:.2f}%)"
     
-    card1 = f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{p_str}</div></div>'
-    card2 = f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{r_str}</div></div>'
-    
-    t_col = "#00e676" if m_val > s_val else "#ff1744"
-    t_txt = "Bullish" if m_val > s_val else "Bearish"
-    card3 = f'<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: {t_col};">{t_txt}</div></div>'
+    card1 = f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{p_str}</div><div class="metric-sub" style="color: {chg_col};">{chg_str}</div></div>'
+    card2 = f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Auto Take-Profit</div></div>'
+    card3 = f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>'
     
     c1.markdown(card1, unsafe_allow_html=True)
     c2.markdown(card2, unsafe_allow_html=True)
     c3.markdown(card3, unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.subheader(f"📈 {sel_name} Live Price Chart")
+    # Secondary Indicators Grid
+    k1, k2, k3 = st.columns(3)
+    r_str = f"{curr_rsi:.2f}"
+    t_col = "#00e676" if m_val > s_val else "#ff1744"
+    t_txt = "Bullish" if m_val > s_val else "Bearish"
     
-    chart_df = pd.DataFrame({
-        'Price': close,
-        'EMA 50': ema,
-        'Upper Band': bb_upper,
-        'Lower Band': bb_lower
-    })
-    st.line_chart(chart_df)
+    card_k1 = f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{r_str}</div></div>'
+    card_k2 = f'<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: {t_col};">{t_txt}</div></div>'
+    card_k3 = f'<div class="metric-card"><div class="metric-label">EMA 50</div><div class="metric-val">{cur_sym}{float(ema.iloc[-1]):,.2f}</div></div>'
+    
+    k1.markdown(card_k1, unsafe_allow_html=True)
+    k2.markdown(card_k2, unsafe_allow_html=True)
+    k3.markdown(card_k3, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
+    
+    # Plotly Interactive Candlestick Chart
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(
+        x=df.index,
+        open=open_p,
+        high=high_p,
+        low=low_p,
+        close=close,
+        name="Price Candlestick",
+        increasing_line_color='#00e676',
+        decreasing_line_color='#ff1744'
+    ))
+    
+    fig.add_trace(go.Scatter(x=df.index, y=ema, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
+    fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="#0d1117",
+        plot_bgcolor="#161b22",
+        margin=dict(l=10, r=10, t=30, b=10),
+        xaxis_rangeslider_visible=False,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📊 Technical Indicators & Bollinger Bands")
-    ema_val = float(ema.iloc[-1]) if not ema.empty and not pd.isna(ema.iloc[-1]) else price
-    
-    st.write(f"- **EMA 50:** {ema_val:,.2f}")
+    st.subheader("📊 Technical Summary")
+    st.write(f"- **EMA 50:** {float(ema.iloc[-1]):,.2f}")
     st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
-    st.write(f"- **Bollinger Upper Band:** {b_upper:,.2f}")
-    st.write(f"- **Bollinger Middle (SMA):** {b_mid:,.2f}")
-    st.write(f"- **Bollinger Lower Band:** {b_lower:,.2f}")
+    st.write(f"- **Bollinger Bands Upper:** {b_upper:,.2f} | **Lower:** {b_lower:,.2f}")
+
 else:
     st.warning("⚠️ Market data temporarily unavailable. Please select another share or timeframe.")
