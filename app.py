@@ -14,6 +14,14 @@ st.markdown("""
 /* Dark theme background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
 
+/* Hide Streamlit default headers, footers & badges */
+#MainMenu {visibility: hidden !important; display: none !important;}
+footer {visibility: hidden !important; display: none !important;}
+header {visibility: hidden !important; display: none !important;}
+.stDeployButton {display: none !important;}
+div[class*="viewerBadge"] {display: none !important;}
+.stAppViewContainerFooter {display: none !important;}
+
 /* Logo and Animated Header Section */
 .logo-header-container {
     display: flex;
@@ -72,7 +80,7 @@ st.markdown("""
     100% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* Enhanced Center Animated Circle Indicator with Bull/Bear Glow */
+/* Enhanced Center Animated Indicator */
 .circle-container { 
     display: flex; 
     flex-direction: column; 
@@ -111,7 +119,7 @@ st.markdown("""
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 45px; 
+    font-size: 48px; 
     background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
     box-shadow: 0 0 25px var(--glow-color, rgba(255, 145, 0, 0.5));
     border: 3px solid var(--signal-color, #ff9100);
@@ -145,12 +153,6 @@ st.markdown("""
 }
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
-
-/* Hide Streamlit default headers/footers */
-#MainMenu {visibility: hidden !important; display: none !important;}
-footer {visibility: hidden !important; display: none !important;}
-header {visibility: hidden !important; display: none !important;}
-.stDeployButton {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -265,7 +267,6 @@ if df is not None and not df.empty:
     if isinstance(close, pd.DataFrame):
         close = close.iloc[:, 0]
     
-    # Currency Determination
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
     
     # RSI Calculation
@@ -299,31 +300,31 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Signal Decision Logic & Green Bull / Red Bear Icons
+    # Signal Logic & Sleek Trend Icons
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
-        col = "#00e676"  # Bright Green for Bull
-        icon = "🐂"  # Bull symbol for strong buy
+        col = "#00e676"  # Vibrant Green
+        icon = "🚀"  # Rocket / Upward Impulse
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
-        col = "#00e676"  # Bright Green for Bull
-        icon = "🐂"  # Bull symbol for buy
+        col = "#00e676"  # Vibrant Green
+        icon = "📈"  # Upward Chart
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
-        col = "#ff1744"  # Bright Red for Bear
-        icon = "🐻"  # Bear symbol for strong sell
+        col = "#ff1744"  # Vibrant Red
+        icon = "📉"  # Downward Chart
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
-        col = "#ff1744"  # Bright Red for Bear
-        icon = "🐻"  # Bear symbol for sell
+        col = "#ff1744"  # Vibrant Red
+        icon = "⚠️"  # Warning / Drop Indicator
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     else:
         sig = "HOLD / NEUTRAL"
-        col = "#ff9100"  # Orange for Neutral
-        icon = "⚖️"  # Balance symbol for neutral
+        col = "#ff9100"  # Vibrant Orange
+        icon = "⚖️"  # Balance scale
         glow_rgba = "rgba(255, 145, 0, 0.8)"
     
     st.markdown(f'''
@@ -336,7 +337,7 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
     
-    # Audio Speech Button component
+    # Audio Speech Component
     signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
     
     components.html(f"""
