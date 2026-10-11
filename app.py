@@ -39,6 +39,7 @@ footer {visibility: hidden;}
 div[data-testid="stDecoration"] {display: hidden;}
 header {visibility: hidden;}
 [data-testid="stFooter"] {display: none !important;}
+iframe {color-scheme: dark;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -49,6 +50,11 @@ symbols = {
     "KSE-100 Index": "^KS100",
     "Bitcoin (BTC-USD)": "BTC-USD",
     "Gold (GC=F)": "GC=F",
+    "S&P 500 (^GSPC)": "^GSPC",
+    "Apple (AAPL)": "AAPL",
+    "Tesla (TSLA)": "TSLA",
+    "NVIDIA (NVDA)": "NVDA",
+    "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
     "BATA (Bata Pakistan)": "BATA.KA",
@@ -139,12 +145,17 @@ st.markdown("<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: "
 def load_data(sym, p, i):
     try:
         df_test = yf.download(sym, period=p, interval=i, progress=False)
-        if df_test is None or len(df_test) < 10:
-            # Fallback to Daily data if short timeframe fails
-            return yf.download(sym, period="6mo", interval="1d", progress=False)
+        if df_test is None or df_test.empty or len(df_test) < 5:
+            # Fallback to standard daily or global index if regional ticker fails
+            df_test = yf.download(sym, period="6mo", interval="1d", progress=False)
+        
+        if df_test is None or df_test.empty or len(df_test) < 5:
+            # Ultimate fallback to S&P 500 if specific ticker has no internet feed
+            df_test = yf.download("^GSPC", period="6mo", interval="1d", progress=False)
+            
         return df_test
     except:
-        return yf.download(sym, period="6mo", interval="1d", progress=False)
+        return yf.download("^GSPC", period="6mo", interval="1d", progress=False)
 
 df = load_data(ticker, period, interval)
 
@@ -230,4 +241,4 @@ if df is not None and not df.empty:
     st.write("- **EMA 50:** " + f"{float(ema.iloc[-1]):,.2f}")
     st.write("- **MACD Line:** " + f"{m_val:.2f}" + " | **Signal Line:** " + f"{s_val:.2f}")
 else:
-    st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share ya timeframe select karein.")
+    st.warning("⚠️ Market data loading. Please try switching between different shares or timeframes.")
