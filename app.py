@@ -8,27 +8,26 @@ st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="w
 st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
-.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; }
+.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
 .glow-circle { 
-    width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 55px; background-color: #161b22; margin-bottom: 12px;
+    width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; background-color: #161b22; margin-bottom: 10px;
     animation: pulseGlow 2s infinite;
 }
 @keyframes pulseGlow {
     0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 145, 0, 0.9); }
+    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 145, 0, 0.8); }
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
-.signal-title { font-size: 32px; font-weight: 900; text-align: center; letter-spacing: 2px; }
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 10px; }
-.metric-label { color: #58a6ff; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-.metric-val { color: #ffffff !important; font-size: 22px !important; font-weight: 800 !important; }
+.signal-title { font-size: 28px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 15px; }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
+.metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+.metric-val { color: #ffffff !important; font-size: 20px !important; font-weight: 800 !important; }
 
 /* Hide Streamlit footer, deployment buttons and branding badges */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 .stDeployButton {display: none !important;}
 div[data-testid="stDecoration"] {display: none !important;}
-header {visibility: hidden !important; display: none !important;}
 [data-testid="stFooter"] {display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 div[class*="streamlitLogo"] {display: none !important;}
@@ -37,9 +36,9 @@ div[class*="viewerBadge"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-st.sidebar.title("📈 PSX Trading Wizards")
-st.sidebar.markdown("By Ijaz Sardar")
-st.sidebar.markdown("---")
+st.markdown("<h2 style='text-align: center; color: #58a6ff;'>📈 PSX Trading Wizards</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e; font-size: 14px;'>By Ijaz Sardar</p>", unsafe_allow_html=True)
+st.markdown("---")
 
 symbols = {
     "KSE-100 Index": "^KS100",
@@ -85,7 +84,13 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-sel_name = st.sidebar.selectbox("Select Market / Share", list(symbols.keys()))
+# Main screen controls for easy mobile navigation
+col_sel1, col_sel2 = st.columns(2)
+with col_sel1:
+    sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
+with col_sel2:
+    sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "1 Hour"])
+
 ticker = symbols[sel_name]
 
 tf_map = {
@@ -93,11 +98,9 @@ tf_map = {
     "Weekly (1W)": ("2y", "1wk"),
     "1 Hour": ("5d", "60m")
 }
-
-sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
 period, interval = tf_map[sel_tf]
 
-st.markdown(f"<h4 style='text-align: center; color: #58a6ff;'>Analyzing: {sel_name} ({sel_tf})</h4>", unsafe_allow_html=True)
+st.markdown(f"<h4 style='text-align: center; color: #58a6ff; margin-top: 10px;'>Analyzing: {sel_name} ({sel_tf})</h4>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=60)
 def load_data(sym, p, i):
