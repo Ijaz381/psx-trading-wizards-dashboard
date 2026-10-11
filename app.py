@@ -3,14 +3,14 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
-# Configure Streamlit page
-st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="wide")
+# Configure Streamlit page layout
+st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@700;900&display=swap');
 
-/* Main dark background styling */
+/* Dark theme background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
 
 /* Logo and Animated Header Section */
@@ -20,7 +20,7 @@ st.markdown("""
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .logo-img {
@@ -28,19 +28,20 @@ st.markdown("""
     height: 140px;
     border-radius: 50%;
     border: 3px solid #00e676;
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
     margin-bottom: 12px;
+    object-fit: cover;
     animation: logoGlow 3s infinite alternate;
 }
 
 @keyframes logoGlow {
     0% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
-    100% { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 230, 118, 0.9); }
+    100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(0, 230, 118, 0.95); }
 }
 
 .animated-title {
     font-family: 'Poppins', sans-serif;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
     text-transform: uppercase;
     background: linear-gradient(90deg, #00e676, #58a6ff, #00e676);
@@ -58,22 +59,22 @@ st.markdown("""
 
 .animated-author {
     font-family: 'Great Vibes', cursive;
-    font-size: 28px;
+    font-size: 32px;
     color: #58a6ff;
-    text-shadow: 0 0 10px rgba(88, 166, 255, 0.7);
-    margin-top: -5px;
+    text-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
+    margin-top: -2px;
     animation: authorPulse 2.5s ease-in-out infinite alternate;
 }
 
 @keyframes authorPulse {
-    0% { opacity: 0.8; transform: translateY(0); }
-    100% { opacity: 1; transform: translateY(-3px); }
+    0% { opacity: 0.85; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(-4px); }
 }
 
 /* Circular glowing indicator styling */
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
 .glow-circle { 
-    width: 130px; height: 130px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; background-color: #161b22; margin-bottom: 10px;
+    width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; background-color: #161b22; margin-bottom: 10px;
     animation: pulseGlow 2s infinite;
 }
 @keyframes pulseGlow {
@@ -81,40 +82,27 @@ st.markdown("""
     50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 145, 0, 0.8); }
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
-.signal-title { font-size: 26px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 12px; }
+.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 10px; }
 
 /* Metric Cards Styling */
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Complete removal of Streamlit elements */
+/* Hide Streamlit elements */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 header {visibility: hidden !important; display: none !important;}
-.stDeployButton {display: none !important; visibility: hidden !important;}
-div[data-testid="stDecoration"] {display: none !important; visibility: hidden !important;}
-[data-testid="stFooter"] {display: none !important; visibility: hidden !important;}
-div[class*="viewerBadge"] {display: none !important; visibility: hidden !important;}
-div[class*="streamlitLogo"] {display: none !important; visibility: hidden !important;}
-div[class*="hosted-with-streamlit"] {display: none !important; visibility: hidden !important;}
-.stAppBadge {display: none !important; visibility: hidden !important;}
-footer[data-testid="stFooter"] {display: none !important; visibility: hidden !important;}
-div[data-testid="stToolbar"] {display: none !important; visibility: hidden !important;}
-a[href*="streamlit.io"] {display: none !important; visibility: hidden !important;}
-div[class*="stAppViewContainerFooter"] {display: none !important; visibility: hidden !important;}
-iframe[title="data-testid"] {display: none !important;}
-[data-testid="stViewerBadge"] {display: none !important; visibility: hidden !important;}
-.viewerBadge_container__1A51n {display: none !important;}
+.stDeployButton {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-# Animated Header with Custom Logo
-logo_url = "https://raw.githubusercontent.com/IjazSardar/PSX-Trading-Wizards/main/logo.jpg" # Direct placeholder URL
+# Custom Logo URL Provided
+logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
 
 st.markdown(f"""
 <div class="logo-header-container">
-    <img src="{logo_url}" class="logo-img" alt="PSX Logo" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/3306/3306018.png';">
+    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
     <div class="animated-title">PSX Trading Wizards</div>
     <div class="animated-author">By Ijaz Sardar</div>
 </div>
@@ -166,11 +154,9 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-col_sel1, col_sel2 = st.columns(2)
-with col_sel1:
-    sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
-with col_sel2:
-    sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "1 Hour", "4 Hours", "15 Minutes", "5 Minutes", "1 Minute"])
+# Main Screen Selection Menus for Mobile Friendly UI
+sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
+sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "4 Hours", "1 Hour", "15 Minutes", "5 Minutes", "1 Minute"])
 
 ticker = symbols[sel_name]
 
@@ -186,7 +172,7 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
-st.markdown(f"<h4 style='text-align: center; color: #58a6ff; margin-top: 10px;'>Analyzing: {sel_name} ({sel_tf})</h4>", unsafe_allow_html=True)
+st.markdown(f"<h5 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h5>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=30)
 def load_data(sym, p, i):
