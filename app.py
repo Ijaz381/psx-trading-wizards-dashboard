@@ -72,7 +72,7 @@ st.markdown("""
     100% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* Enhanced Center Animated Circle Indicator */
+/* Enhanced Center Animated Circle Indicator with Bull/Bear Glow */
 .circle-container { 
     display: flex; 
     flex-direction: column; 
@@ -115,13 +115,13 @@ st.markdown("""
     background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
     box-shadow: 0 0 25px var(--glow-color, rgba(255, 145, 0, 0.5));
     border: 3px solid var(--signal-color, #ff9100);
-    animation: pulseGlow 2s ease-in-out infinite alternate;
+    animation: pulseGlow 1.8s ease-in-out infinite alternate;
     z-index: 2;
 }
 
 @keyframes pulseGlow {
-    0% { transform: scale(0.96); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); }
-    100% { transform: scale(1.04); box-shadow: 0 0 35px var(--glow-color, rgba(255, 145, 0, 0.9)); }
+    0% { transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); filter: drop-shadow(0 0 5px var(--signal-color)); }
+    100% { transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); filter: drop-shadow(0 0 15px var(--signal-color)); }
 }
 
 .signal-title { 
@@ -299,30 +299,30 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Signal Decision Logic & Bull / Bear Icons
+    # Signal Decision Logic & Green Bull / Red Bear Icons
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
-        col = "#00e676"
+        col = "#00e676"  # Bright Green for Bull
         icon = "🐂"  # Bull symbol for strong buy
-        glow_rgba = "rgba(0, 230, 118, 0.8)"
+        glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
-        col = "#00e676"
-        icon = "📈"  # Up trend symbol
-        glow_rgba = "rgba(0, 230, 118, 0.8)"
+        col = "#00e676"  # Bright Green for Bull
+        icon = "🐂"  # Bull symbol for buy
+        glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
-        col = "#ff1744"
+        col = "#ff1744"  # Bright Red for Bear
         icon = "🐻"  # Bear symbol for strong sell
-        glow_rgba = "rgba(255, 23, 68, 0.8)"
+        glow_rgba = "rgba(255, 23, 68, 0.85)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
-        col = "#ff1744"
-        icon = "📉"  # Down trend symbol
-        glow_rgba = "rgba(255, 23, 68, 0.8)"
+        col = "#ff1744"  # Bright Red for Bear
+        icon = "🐻"  # Bear symbol for sell
+        glow_rgba = "rgba(255, 23, 68, 0.85)"
     else:
         sig = "HOLD / NEUTRAL"
-        col = "#ff9100"
+        col = "#ff9100"  # Orange for Neutral
         icon = "⚖️"  # Balance symbol for neutral
         glow_rgba = "rgba(255, 145, 0, 0.8)"
     
