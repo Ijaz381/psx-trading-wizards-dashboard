@@ -9,13 +9,21 @@ st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; }
-.glow-circle { width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; background-color: #161b22; margin-bottom: 12px; }
-.signal-title { font-size: 34px; font-weight: 900; text-align: center; letter-spacing: 2px; }
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 10px; }
-.metric-label { color: #58a6ff; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-.metric-val { color: #ffffff !important; font-size: 24px !important; font-weight: 800 !important; }
+.glow-circle { 
+    width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 55px; background-color: #161b22; margin-bottom: 12px;
+    animation: pulseGlow 2s infinite;
+}
+@keyframes pulseGlow {
+    0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 145, 0, 0.9); }
+    100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+}
+.signal-title { font-size: 32px; font-weight: 900; text-align: center; letter-spacing: 2px; }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 10px; }
+.metric-label { color: #58a6ff; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+.metric-val { color: #ffffff !important; font-size: 22px !important; font-weight: 800 !important; }
 
-/* Hide Streamlit footer & branding badges completely */
+/* Hide Streamlit footer, deployment buttons and branding badges */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 .stDeployButton {display: none !important;}
@@ -25,12 +33,13 @@ header {visibility: hidden !important; display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 div[class*="streamlitLogo"] {display: none !important;}
 div[class*="hosted-with-streamlit"] {display: none !important;}
-iframe {color-scheme: dark;}
+div[class*="viewerBadge"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
 st.sidebar.title("📈 PSX Trading Wizards")
 st.sidebar.markdown("By Ijaz Sardar")
+st.sidebar.markdown("---")
 
 symbols = {
     "KSE-100 Index": "^KS100",
@@ -104,7 +113,6 @@ def load_data(sym, p, i):
         except:
             pass
             
-    # Ultimate Fallback: if network fails completely, generate realistic mock market data so the app never breaks
     if df_test is None or df_test.empty or len(df_test) < 5:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D')
         np.random.seed(42)
@@ -158,7 +166,7 @@ if df is not None and not df.empty:
     
     st.markdown(f'''
     <div class="circle-container">
-        <div class="glow-circle" style="border: 5px solid {col}; color: {col}; box-shadow: {glow};">{icon}</div>
+        <div class="glow-circle" style="border: 4px solid {col}; color: {col}; box-shadow: {glow};">{icon}</div>
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
     ''', unsafe_allow_html=True)
@@ -186,4 +194,4 @@ if df is not None and not df.empty:
     st.write(f"- **EMA 50:** {ema_val:,.2f}")
     st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
 else:
-    st.warning("⚠️ Market data temporarily unavailable. Please select another share.")
+    st.warning("⚠️ Market data temporarily unavailable.")
