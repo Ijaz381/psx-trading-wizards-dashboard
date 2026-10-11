@@ -357,29 +357,11 @@ if df is not None and not df.empty:
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
     # Animated Green and Red Candlestick Graphics
-    green_candles_html = '''
-    <div class="candle-box">
-        <div class="candle candle-green candle-1"></div>
-        <div class="candle candle-green candle-2"></div>
-        <div class="candle candle-green candle-3"></div>
-    </div>
-    '''
+    green_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
     
-    red_candles_html = '''
-    <div class="candle-box">
-        <div class="candle candle-red candle-1"></div>
-        <div class="candle candle-red candle-2"></div>
-        <div class="candle candle-red candle-3"></div>
-    </div>
-    '''
+    red_candles_html = """<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>"""
     
-    neutral_candles_html = '''
-    <div class="candle-box">
-        <div class="candle candle-green candle-1"></div>
-        <div class="candle candle-red candle-2"></div>
-        <div class="candle candle-green candle-3"></div>
-    </div>
-    '''
+    neutral_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
     
     # Signal Logic & Animated Graphics Assignment
     if curr_rsi < 42 and price <= b_lower * 1.01:
