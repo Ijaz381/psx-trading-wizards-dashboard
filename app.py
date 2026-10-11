@@ -348,24 +348,50 @@ if df is not None and not df.empty:
             <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba}; color: {col};">{icon}</div>
         </div>
         <div class="signal-title" style="color: {col};">{sig}</div>
-        <button class="voice-btn" onclick="speakSignal('{sel_name}', '{sig}')">🔊 Listen Signal</button>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Audio Speech Button fix using HTML iFrame component for reliable SpeechSynthesis execution
+    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
+    
+    import streamlit.components.v1 as components
+    
+    components.html(f"""
+    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
+        <button id="speakBtn" style="
+            background: linear-gradient(135deg, #00e676, #00b0ff);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        ">
+            🔊 Listen Signal
+        </button>
     </div>
 
     <script>
-    function speakSignal(share, signal) {{
+    document.getElementById("speakBtn").addEventListener("click", function() {{
         if ('speechSynthesis' in window) {{
             window.speechSynthesis.cancel();
-            var text = "Signal for " + share + " is " + signal;
-            var msg = new SpeechSynthesisUtterance(text);
+            var msg = new SpeechSynthesisUtterance("{signal_speech_text}");
             msg.rate = 0.95;
             msg.pitch = 1.0;
+            msg.lang = 'en-US';
             window.speechSynthesis.speak(msg);
         }} else {{
-            alert("Voice synthesis is not supported on this browser.");
+            alert("Speech Synthesis is not supported in this browser.");
         }}
-    }}
+    }});
     </script>
-    ''', unsafe_allow_html=True)
+    """, height=60)
     
     c1, c2, c3 = st.columns(3)
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
