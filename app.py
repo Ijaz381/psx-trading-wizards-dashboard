@@ -15,33 +15,32 @@ st.markdown("""
 }
 
 .anim-circle {
-    width: 170px;
-    height: 170px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 65px;
+    font-size: 55px;
     background-color: #161b22;
     margin: 0 auto 15px auto;
     animation: pulseGlow 2s infinite ease-in-out;
 }
 
-.signal-title { font-size: 36px; font-weight: 900; text-align: center; letter-spacing: 2px; }
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 15px; }
-.metric-label { color: #58a6ff; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
-.metric-val { color: #ffffff !important; font-size: 28px !important; font-weight: 800 !important; }
+.signal-title { font-size: 32px; font-weight: 900; text-align: center; letter-spacing: 2px; }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 10px; }
+.metric-label { color: #58a6ff; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+.metric-val { color: #ffffff !important; font-size: 24px !important; font-weight: 800 !important; }
 
-/* Aggressively Hiding Streamlit Branding, Footers, Deploy Buttons, and Floating Badges */
+/* Completely removing Streamlit footer, branding, and deployment badges */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 .stDeployButton {display: none !important;}
 div[data-testid="stDecoration"] {display: none !important;}
 header {visibility: hidden !important; display: none !important;}
 [data-testid="stFooter"] {display: none !important;}
-div.viewerBadge_container__1QSob {display: none !important;}
-.viewerBadge_link__1S137 {display: none !important;}
-#root > div:nth-child(1) > div.withScreencast > div > div > footer {display: none !important;}
+div[class*="viewerBadge"] {display: none !important;}
+div[class*="streamlitLogo"] {display: none !important;}
 iframe {color-scheme: dark;}
 </style>
 """, unsafe_allow_html=True)
@@ -99,15 +98,13 @@ ticker = symbols[sel_name]
 tf_map = {
     "Daily (1D)": ("6mo", "1d"),
     "Weekly (1W)": ("2y", "1wk"),
-    "1 Hour": ("5d", "60m"),
-    "15 Minutes": ("5d", "15m"),
-    "5 Minutes": ("1d", "5m")
+    "1 Hour": ("5d", "60m")
 }
 
 sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
 period, interval = tf_map[sel_tf]
 
-st.markdown(f"<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: {sel_name} ({sel_tf})</h3>", unsafe_allow_html=True)
+st.markdown(f"<h4 style='text-align: center; color: #58a6ff;'>Analyzing: {sel_name} ({sel_tf})</h4>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=60)
 def load_data(sym, p, i):
@@ -116,10 +113,10 @@ def load_data(sym, p, i):
         if df_test is None or df_test.empty or len(df_test) < 2:
             df_test = yf.download(sym, period="6mo", interval="1d", progress=False)
         if df_test is None or df_test.empty or len(df_test) < 2:
-            df_test = yf.download("^GSPC", period="6mo", interval="1d", progress=False)
+            df_test = yf.download("^KS100", period="6mo", interval="1d", progress=False)
         return df_test
     except:
-        return yf.download("^GSPC", period="6mo", interval="1d", progress=False)
+        return yf.download("^KS100", period="6mo", interval="1d", progress=False)
 
 df = load_data(ticker, period, interval)
 
@@ -162,7 +159,7 @@ if df is not None and not df.empty:
         icon = "➔"
     
     st.markdown(f'''
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 25px 0;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0;">
         <div class="anim-circle" style="border: 5px solid {col}; color: {col};">{icon}</div>
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
@@ -191,4 +188,4 @@ if df is not None and not df.empty:
     st.write(f"- **EMA 50:** {ema_val:,.2f}")
     st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
 else:
-    st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share ya timeframe select karein.")
+    st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share select karein.")
