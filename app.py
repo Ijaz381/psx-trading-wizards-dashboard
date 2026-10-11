@@ -2,7 +2,6 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
@@ -90,7 +89,7 @@ st.markdown("""
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Hide Streamlit elements */
+/* Hide Streamlit default headers/footers */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 header {visibility: hidden !important; display: none !important;}
@@ -296,68 +295,14 @@ if df is not None and not df.empty:
     st.markdown("---")
     st.subheader(f"📈 {sel_name} Live Price Chart")
     
-    fig = go.Figure()
-    
-    # Check if Open, High, Low columns exist for Candlestick chart
-    has_ohlc = all(col in df.columns for col in ['Open', 'High', 'Low', 'Close'])
-    
-    if has_ohlc:
-        fig.add_trace(go.Candlestick(
-            x=df.index,
-            open=df['Open'],
-            high=df['High'],
-            low=df['Low'],
-            close=df['Close'],
-            name='Price',
-            increasing_line_color='#00e676',
-            decreasing_line_color='#ff1744'
-        ))
-    else:
-        fig.add_trace(go.Scatter(
-            x=df.index,
-            y=close,
-            mode='lines',
-            name='Close Price',
-            line=dict(color='#00e676', width=2)
-        ))
-        
-    # Add EMA 50 Overlay
-    fig.add_trace(go.Scatter(
-        x=df.index,
-        y=ema,
-        mode='lines',
-        name='EMA 50',
-        line=dict(color='#ffd600', width=1.5, dash='dash')
-    ))
-    
-    # Add Bollinger Upper & Lower Bands
-    fig.add_trace(go.Scatter(
-        x=df.index,
-        y=bb_upper,
-        mode='lines',
-        name='BB Upper',
-        line=dict(color='rgba(88, 166, 255, 0.5)', width=1)
-    ))
-    
-    fig.add_trace(go.Scatter(
-        x=df.index,
-        y=bb_lower,
-        mode='lines',
-        name='BB Lower',
-        line=dict(color='rgba(88, 166, 255, 0.5)', width=1)
-    ))
-
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="#0d1117",
-        plot_bgcolor="#161b22",
-        margin=dict(l=10, r=10, t=30, b=10),
-        height=400,
-        xaxis_rangeslider_visible=False,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
+    # Native Streamlit Chart (No Plotly requirement)
+    chart_df = pd.DataFrame({
+        'Price': close,
+        'EMA 50': ema,
+        'Upper Band': bb_upper,
+        'Lower Band': bb_lower
+    })
+    st.line_chart(chart_df)
 
     st.markdown("---")
     st.subheader("📊 Technical Indicators Overview")
