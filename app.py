@@ -111,7 +111,7 @@ st.markdown("""
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 50px; 
+    font-size: 45px; 
     background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
     box-shadow: 0 0 25px var(--glow-color, rgba(255, 145, 0, 0.5));
     border: 3px solid var(--signal-color, #ff9100);
@@ -211,18 +211,18 @@ symbols = {
 }
 
 sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
-sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "4 Hours", "1 Hour", "15 Minutes", "5 Minutes", "1 Minute"])
+sel_tf = st.selectbox("Select Timeframe", ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
 
 ticker = symbols[sel_name]
 
 tf_map = {
-    "Daily (1D)": ("6mo", "1d"),
-    "Weekly (1W)": ("2y", "1wk"),
-    "4 Hours": ("60d", "60m"),
-    "1 Hour": ("30d", "60m"),
-    "15 Minutes": ("10d", "15m"),
+    "1 Minute": ("1d", "1m"),
     "5 Minutes": ("5d", "5m"),
-    "1 Minute": ("1d", "1m")
+    "15 Minutes": ("10d", "15m"),
+    "1 Hour": ("30d", "60m"),
+    "4 Hours": ("60d", "60m"),
+    "Daily (1D)": ("6mo", "1d"),
+    "Weekly (1W)": ("2y", "1wk")
 }
 period, interval = tf_map[sel_tf]
 
@@ -299,38 +299,38 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Signal Decision Logic
+    # Signal Decision Logic & Bull / Bear Icons
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
         col = "#00e676"
-        icon = "🚀"
+        icon = "🐂"  # Bull symbol for strong buy
         glow_rgba = "rgba(0, 230, 118, 0.8)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
         col = "#00e676"
-        icon = "↗"
+        icon = "📈"  # Up trend symbol
         glow_rgba = "rgba(0, 230, 118, 0.8)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
         col = "#ff1744"
-        icon = "⚠️"
+        icon = "🐻"  # Bear symbol for strong sell
         glow_rgba = "rgba(255, 23, 68, 0.8)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"
-        icon = "↘"
+        icon = "📉"  # Down trend symbol
         glow_rgba = "rgba(255, 23, 68, 0.8)"
     else:
         sig = "HOLD / NEUTRAL"
         col = "#ff9100"
-        icon = "➔"
+        icon = "⚖️"  # Balance symbol for neutral
         glow_rgba = "rgba(255, 145, 0, 0.8)"
     
     st.markdown(f'''
     <div class="circle-container">
         <div class="glow-circle-wrapper">
             <div class="glow-circle-ring" style="--signal-color: {col};"></div>
-            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba}; color: {col};">{icon}</div>
+            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba};">{icon}</div>
         </div>
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
@@ -404,7 +404,7 @@ if df is not None and not df.empty:
     st.line_chart(chart_df)
 
     st.markdown("---")
-    st.subheader("📊 Technical Indicators Overview")
+    st.subheader("📊 Technical Indicators & Bollinger Bands")
     ema_val = float(ema.iloc[-1]) if not ema.empty and not pd.isna(ema.iloc[-1]) else price
     
     st.write(f"- **EMA 50:** {ema_val:,.2f}")
