@@ -7,7 +7,7 @@ import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
 
-# Configure Streamlit page layout
+# Configure Streamlit page layout and title
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
 st.markdown("""
@@ -17,13 +17,16 @@ st.markdown("""
 /* Dark theme background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
 
-/* Hide Streamlit default headers, footers & badges */
+/* Hide Streamlit default headers, footers, badges, and floating menus completely */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 header {visibility: hidden !important; display: none !important;}
 .stDeployButton {display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 .stAppViewContainerFooter {display: none !important;}
+iframe[title="streamlit_badge"] {display: none !important; visibility: hidden !important;}
+section[data-testid="stSidebarNav"] {display: none !important;}
+footer, .viewerBadge_container__1QSob, .styles_viewerBadge__1yG6_ { display: none !important; }
 
 /* Scrolling Live Market Ticker */
 .ticker-wrap {
@@ -35,7 +38,7 @@ div[class*="viewerBadge"] {display: none !important;}
     padding: 8px 0;
     white-space: nowrap;
     box-sizing: border-box;
-    margin: 10px 0 15px 0;
+    margin: 5px 0 10px 0;
 }
 
 .ticker {
@@ -63,17 +66,17 @@ div[class*="viewerBadge"] {display: none !important;}
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-top: 5px;
+    margin-top: 2px;
     margin-bottom: 5px;
 }
 
 .logo-img {
-    width: 130px;
-    height: 130px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     border: 3px solid #00e676;
     box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     object-fit: cover;
     animation: logoGlow 3s infinite alternate;
 }
@@ -85,7 +88,7 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .animated-title {
     font-family: 'Poppins', sans-serif;
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 900;
     text-transform: uppercase;
     background: linear-gradient(90deg, #00e676, #58a6ff, #00e676);
@@ -103,7 +106,7 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .animated-author {
     font-family: 'Great Vibes', cursive;
-    font-size: 32px;
+    font-size: 30px;
     color: #58a6ff;
     text-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
     margin-top: -2px;
@@ -120,7 +123,7 @@ div[class*="viewerBadge"] {display: none !important;}
     gap: 12px;
     justify-content: center;
     align-items: center;
-    margin-top: 5px;
+    margin-top: 4px;
     flex-wrap: wrap;
 }
 
@@ -386,7 +389,6 @@ symbols = {
 
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
 
-# Header Branding Section
 st.markdown(f"""
 <div class="logo-header-container">
     <img src="{logo_url}" class="logo-img" alt="PSX Logo">
@@ -416,7 +418,7 @@ setInterval(updateClock, 1000);
 """
 components.html(clock_component_code, height=0)
 
-# Fetch quick data for the Scrolling Market Ticker
+# Live Market Scrolling Ticker right below header
 ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -449,7 +451,6 @@ if ticker_html_items:
     </div>
     """, unsafe_allow_html=True)
 
-# Voice Search Control
 st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 voice_search_code = """
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
@@ -536,7 +537,6 @@ with st.expander("📊 Market Overview & Live Summary", expanded=False):
     if overview_data:
         st.dataframe(pd.DataFrame(overview_data), use_container_width=True)
 
-# Search & Selection Inputs
 search_query = st.text_input("🔍 Type to Search Stock / Share Name:", "")
 filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
 if not filtered_symbols:
@@ -757,7 +757,6 @@ if df is not None and not df.empty:
     </script>
     """, height=45)
 
-    # Share Signal Links
     share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
     tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
@@ -769,7 +768,6 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
     
-    # Metric Cards Grid
     c1, c2, c3 = st.columns(3)
     
     p_str = f"{price:,.2f}"
@@ -784,7 +782,6 @@ if df is not None and not df.empty:
     c2.markdown(card2, unsafe_allow_html=True)
     c3.markdown(card3, unsafe_allow_html=True)
     
-    # Secondary Indicators Grid
     k1, k2, k3 = st.columns(3)
     r_str = f"{curr_rsi:.2f}"
     t_col = "#00e676" if m_val > s_val else "#ff1744"
@@ -801,7 +798,6 @@ if df is not None and not df.empty:
     st.markdown("---")
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     
-    # Plotly Interactive Candlestick Chart
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df.index,
