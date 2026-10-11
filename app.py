@@ -12,7 +12,7 @@ st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="c
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&family=Orbitron:wght@600;700;900&display=swap');
 
 /* Dark theme background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
@@ -116,31 +116,36 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .header-info-strip {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     justify-content: center;
     align-items: center;
-    margin-top: 5px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
+    margin-top: 8px;
+    flex-wrap: wrap;
 }
 
 .header-badge {
     background: #161b22;
     border: 1px solid #30363d;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     color: #00e676;
-    box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(0, 230, 118, 0.25);
+    letter-spacing: 0.5px;
 }
 
 .header-phone {
     background: #161b22;
     border: 1px solid #30363d;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     color: #58a6ff;
-    box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(88, 166, 255, 0.25);
     text-decoration: none;
 }
 
@@ -412,7 +417,20 @@ if ticker_html_items:
     """, unsafe_allow_html=True)
 
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
-current_live_time = datetime.now().strftime("%d %b %Y, %I:%M:%S %p")
+
+# Live Pakistan Digital Clock Component
+clock_component_code = """
+<div style="font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: bold; color: #00e676; text-align: center;" id="pktClock">Loading Pakistan Time...</div>
+<script>
+function updateClock() {
+    const options = { timeZone: 'Asia/Karachi', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    const formatter = new Intl.DateTimeFormat([], options);
+    document.getElementById('pktClock').innerText = "🕒 " + formatter.format(new Date());
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+"""
 
 st.markdown(f"""
 <div class="logo-header-container">
@@ -420,7 +438,11 @@ st.markdown(f"""
     <div class="animated-title">PSX Trading Wizards</div>
     <div class="animated-author">By Ijaz Sardar</div>
     <div class="header-info-strip">
-        <div class="header-badge">🕒 {current_live_time}</div>
+        <div class="header-badge">
+""")
+components.html(clock_component_code, height=30)
+st.markdown(f"""
+        </div>
         <a href="tel:+923007581169" class="header-phone">📞 +92 300 7581169</a>
     </div>
 </div>
