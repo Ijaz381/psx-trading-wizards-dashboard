@@ -8,8 +8,67 @@ st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="w
 
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@700;900&display=swap');
+
 /* Main dark background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
+
+/* Logo and Animated Header Section */
+.logo-header-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 3px solid #00e676;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+    margin-bottom: 12px;
+    animation: logoGlow 3s infinite alternate;
+}
+
+@keyframes logoGlow {
+    0% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
+    100% { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 230, 118, 0.9); }
+}
+
+.animated-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #00e676, #58a6ff, #00e676);
+    background-size: 200% auto;
+    color: #fff;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 3s linear infinite;
+    letter-spacing: 1.5px;
+}
+
+@keyframes shine {
+    to { background-position: 200% center; }
+}
+
+.animated-author {
+    font-family: 'Great Vibes', cursive;
+    font-size: 28px;
+    color: #58a6ff;
+    text-shadow: 0 0 10px rgba(88, 166, 255, 0.7);
+    margin-top: -5px;
+    animation: authorPulse 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes authorPulse {
+    0% { opacity: 0.8; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(-3px); }
+}
 
 /* Circular glowing indicator styling */
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
@@ -29,7 +88,7 @@ st.markdown("""
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Complete removal of Streamlit branding, footer, red badge, and header widgets */
+/* Complete removal of Streamlit elements */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 header {visibility: hidden !important; display: none !important;}
@@ -48,41 +107,19 @@ iframe[title="data-testid"] {display: none !important;}
 [data-testid="stViewerBadge"] {display: none !important; visibility: hidden !important;}
 .viewerBadge_container__1A51n {display: none !important;}
 </style>
-
-<script>
-// JavaScript code to actively monitor and remove Streamlit badges and red footers
-const removeBadges = () => {
-    // Select all potential badge elements
-    const selectors = [
-        'footer',
-        '[data-testid="stFooter"]',
-        '[data-testid="stViewerBadge"]',
-        '.stAppBadge',
-        'div[class*="viewerBadge"]',
-        'div[class*="hosted-with-streamlit"]',
-        'a[href*="streamlit.io"]',
-        'div[class*="stAppViewContainerFooter"]'
-    ];
-    
-    selectors.forEach(selector => {
-        document.querySelectorAll(selector).forEach(el => {
-            el.remove();
-        });
-    });
-};
-
-// Run badge removal continuously using mutation observer
-const observer = new MutationObserver(removeBadges);
-observer.observe(document.body, { childList: true, subtree: true });
-
-// Initial execution
-setInterval(removeBadges, 300);
-</script>
 """, unsafe_allow_html=True)
 
-# Header Section
-st.markdown("<h2 style='text-align: center; color: #58a6ff;'>📈 PSX Trading Wizards</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8b949e; font-size: 13px;'>By Ijaz Sardar</p>", unsafe_allow_html=True)
+# Animated Header with Custom Logo
+logo_url = "https://raw.githubusercontent.com/IjazSardar/PSX-Trading-Wizards/main/logo.jpg" # Direct placeholder URL
+
+st.markdown(f"""
+<div class="logo-header-container">
+    <img src="{logo_url}" class="logo-img" alt="PSX Logo" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/3306/3306018.png';">
+    <div class="animated-title">PSX Trading Wizards</div>
+    <div class="animated-author">By Ijaz Sardar</div>
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
 
 symbols = {
