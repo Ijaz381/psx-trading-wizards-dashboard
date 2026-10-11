@@ -32,13 +32,16 @@ st.markdown("""
 .metric-label { color: #58a6ff; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
 .metric-val { color: #ffffff !important; font-size: 28px !important; font-weight: 800 !important; }
 
-/* Hiding Streamlit Branding & Footer Badges Completely */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-.stDeployButton {display: none;}
-div[data-testid="stDecoration"] {display: none;}
-header {visibility: hidden;}
+/* Aggressively Hiding Streamlit Branding, Footers, Deploy Buttons, and Floating Badges */
+#MainMenu {visibility: hidden !important; display: none !important;}
+footer {visibility: hidden !important; display: none !important;}
+.stDeployButton {display: none !important;}
+div[data-testid="stDecoration"] {display: none !important;}
+header {visibility: hidden !important; display: none !important;}
 [data-testid="stFooter"] {display: none !important;}
+div.viewerBadge_container__1QSob {display: none !important;}
+.viewerBadge_link__1S137 {display: none !important;}
+#root > div:nth-child(1) > div.withScreencast > div > div > footer {display: none !important;}
 iframe {color-scheme: dark;}
 </style>
 """, unsafe_allow_html=True)
@@ -104,15 +107,15 @@ tf_map = {
 sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
 period, interval = tf_map[sel_tf]
 
-st.markdown("<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: " + sel_name + " (" + sel_tf + ")</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: {sel_name} ({sel_tf})</h3>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=60)
 def load_data(sym, p, i):
     try:
         df_test = yf.download(sym, period=p, interval=i, progress=False)
-        if df_test is None or df_test.empty or len(df_test) < 5:
+        if df_test is None or df_test.empty or len(df_test) < 2:
             df_test = yf.download(sym, period="6mo", interval="1d", progress=False)
-        if df_test is None or df_test.empty or len(df_test) < 5:
+        if df_test is None or df_test.empty or len(df_test) < 2:
             df_test = yf.download("^GSPC", period="6mo", interval="1d", progress=False)
         return df_test
     except:
@@ -142,8 +145,8 @@ if df is not None and not df.empty:
     sig_line = macd.ewm(span=9, adjust=False).mean()
     
     price = float(close.iloc[-1])
-    m_val = float(macd.iloc[-1]) if not macd.empty else 0.0
-    s_val = float(sig_line.iloc[-1]) if not sig_line.empty else 0.0
+    m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
+    s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
     
     if curr_rsi < 45 and m_val > s_val:
         sig = "BUY"
@@ -171,12 +174,12 @@ if df is not None and not df.empty:
     p_str = f"{price:,.2f}"
     r_str = f"{curr_rsi:.2f}"
     
-    card1 = '<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">' + cur_sym + p_str + '</div></div>'
-    card2 = '<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">' + r_str + '</div></div>'
+    card1 = f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{p_str}</div></div>'
+    card2 = f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{r_str}</div></div>'
     
     t_col = "#00e676" if m_val > s_val else "#ff1744"
     t_txt = "Bullish" if m_val > s_val else "Bearish"
-    card3 = '<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: ' + t_col + ';">' + t_txt + '</div></div>'
+    card3 = f'<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: {t_col};">{t_txt}</div></div>'
     
     c1.markdown(card1, unsafe_allow_html=True)
     c2.markdown(card2, unsafe_allow_html=True)
@@ -184,7 +187,8 @@ if df is not None and not df.empty:
     
     st.markdown("---")
     st.subheader("📊 Technical Indicators Summary")
-    st.write("- **EMA 50:** " + f"{float(ema.iloc[-1]):,.2f}")
-    st.write("- **MACD Line:** " + f"{m_val:.2f}" + " | **Signal Line:** " + f"{s_val:.2f}")
+    ema_val = float(ema.iloc[-1]) if not ema.empty and not pd.isna(ema.iloc[-1]) else price
+    st.write(f"- **EMA 50:** {ema_val:,.2f}")
+    st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
 else:
     st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share ya timeframe select karein.")
