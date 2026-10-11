@@ -10,24 +10,24 @@ st.markdown("""
 
 @keyframes pulseGlow {
     0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
-    50% { transform: scale(1.06); box-shadow: 0 0 45px rgba(255, 145, 0, 0.9); }
+    50% { transform: scale(1.06); box-shadow: 0 0 40px rgba(255, 145, 0, 0.9); }
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
 
 .anim-circle {
-    width: 180px;
-    height: 180px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 65px;
+    font-size: 60px;
     background-color: #161b22;
     margin: 0 auto 15px auto;
     animation: pulseGlow 2s infinite ease-in-out;
 }
 
-.signal-title { font-size: 38px; font-weight: 900; text-align: center; letter-spacing: 2px; }
+.signal-title { font-size: 36px; font-weight: 900; text-align: center; letter-spacing: 2px; }
 .metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
 .metric-label { color: #58a6ff; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
 .metric-val { color: #ffffff !important; font-size: 28px !important; font-weight: 800 !important; }
@@ -36,8 +36,9 @@ st.markdown("""
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 .stDeployButton {display: none;}
-div[data-testid="stDecoration"] {display: none;}
+div[data-testid="stDecoration"] {display: hidden;}
 header {visibility: hidden;}
+[data-testid="stFooter"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,27 +90,26 @@ st.sidebar.markdown("🎙️ **Voice Assistant**")
 voice_html = """
 <div style="background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid #30363d; text-align: center;">
     <button onclick="startListening()" style="background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">🎙️ Speak Command</button>
-    <p id="voice-status" style="color: #8b949e; font-size: 12px; margin-top: 8px;">Click & say symbol name (e.g., "HBL", "Gold", "Bitcoin")</p>
+    <p id="voice-status" style="color: #8b949e; font-size: 12px; margin-top: 8px;">Tap & speak market name</p>
 </div>
 <script>
 function startListening() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        alert("Speech Recognition is not supported in this browser.");
+        alert("Speech Recognition not supported in this browser.");
         return;
     }
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    document.getElementById("voice-status").innerText = "Listening... Speak now!";
+    document.getElementById("voice-status").innerText = "Listening...";
     
     recognition.onresult = function(event) {
         const speechToText = event.results[0][0].transcript.toLowerCase();
         document.getElementById("voice-status").innerText = "Heard: " + speechToText;
-        // Search in select elements or trigger navigation if possible
     };
     
     recognition.onerror = function() {
-        document.getElementById("voice-status").innerText = "Error occurred, try again.";
+        document.getElementById("voice-status").innerText = "Try again.";
     };
     
     recognition.start();
@@ -122,13 +122,12 @@ sel_name = st.sidebar.selectbox("Select Market / Share", list(symbols.keys()))
 ticker = symbols[sel_name]
 
 tf_map = {
-    "1 Minute": ("1d", "1m"),
-    "5 Minutes": ("1d", "5m"),
-    "15 Minutes": ("5d", "15m"),
-    "1 Hour": ("5d", "60m"),
-    "4 Hours": ("1mo", "60m"),
     "Daily (1D)": ("6mo", "1d"),
-    "Weekly (1W)": ("2y", "1wk")
+    "Weekly (1W)": ("2y", "1wk"),
+    "1 Hour": ("5d", "60m"),
+    "15 Minutes": ("5d", "15m"),
+    "5 Minutes": ("1d", "5m"),
+    "1 Minute": ("1d", "1m")
 }
 
 sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
@@ -139,13 +138,20 @@ st.markdown("<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: "
 @st.cache_data(ttl=60)
 def load_data(sym, p, i):
     try:
-        return yf.download(sym, period=p, interval=i, progress=False)
+        df_test = yf.download(sym, period=p, interval=i, progress=False)
+        if df_test is None or len(df_test) < 10:
+            # Fallback to Daily data if short timeframe fails
+            return yf.download(sym, period="6mo", interval="1d", progress=False)
+        return df_test
     except:
-        return None
+        return yf.download(sym, period="6mo", interval="1d", progress=False)
 
 df = load_data(ticker, period, interval)
 
-if df is not None and not df.empty and len(df) >= 14:
+if df is not None and not df.empty:
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+        
     close = df['Close']
     if isinstance(close, pd.DataFrame):
         close = close.iloc[:, 0]
@@ -154,9 +160,9 @@ if df is not None and not df.empty and len(df) >= 14:
     gain = delta.where(delta > 0, 0).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rsi = 100 - (100 / (1 + (gain / loss)))
-    curr_rsi = float(rsi.iloc[-1])
+    curr_rsi = float(rsi.iloc[-1]) if not rsi.empty and not pd.isna(rsi.iloc[-1]) else 50.0
     
-    ema = close.ewm(span=min(50, len(df)), adjust=False).mean()
+    ema = close.ewm(span=min(50, len(close)), adjust=False).mean()
     
     exp1 = close.ewm(span=12, adjust=False).mean()
     exp2 = close.ewm(span=26, adjust=False).mean()
@@ -164,8 +170,8 @@ if df is not None and not df.empty and len(df) >= 14:
     sig_line = macd.ewm(span=9, adjust=False).mean()
     
     price = float(close.iloc[-1])
-    m_val = float(macd.iloc[-1])
-    s_val = float(sig_line.iloc[-1])
+    m_val = float(macd.iloc[-1]) if not macd.empty else 0.0
+    s_val = float(sig_line.iloc[-1]) if not sig_line.empty else 0.0
     
     if curr_rsi < 45 and m_val > s_val:
         sig = "BUY"
@@ -190,7 +196,7 @@ if df is not None and not df.empty and len(df) >= 14:
     # Text-to-Speech Button for Signal
     speech_text = f"The current signal for {sel_name} is {sig}. Live price is {price:.2f}."
     tts_html = f"""
-    <div style="text-align: center; margin-bottom: 20px;">
+    <div style="text-align: center; margin-bottom: 25px;">
         <button onclick="speakSignal()" style="background: #1f6feb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🔊 Listen to Signal</button>
     </div>
     <script>
@@ -224,4 +230,4 @@ if df is not None and not df.empty and len(df) >= 14:
     st.write("- **EMA 50:** " + f"{float(ema.iloc[-1]):,.2f}")
     st.write("- **MACD Line:** " + f"{m_val:.2f}" + " | **Signal Line:** " + f"{s_val:.2f}")
 else:
-    st.warning("⚠️ Yahoo Finance per " + sel_tf + " ka live data is asset ke liye filhal dastyab nahi hai. Baraye meharbani 'Daily (1D)' ya 'Weekly (1W)' timeframe select karein.")
+    st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share ya timeframe select karein.")
