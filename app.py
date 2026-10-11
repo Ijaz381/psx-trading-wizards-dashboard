@@ -35,7 +35,7 @@ div[class*="viewerBadge"] {display: none !important;}
     padding: 8px 0;
     white-space: nowrap;
     box-sizing: border-box;
-    margin-bottom: 15px;
+    margin: 10px 0 15px 0;
 }
 
 .ticker {
@@ -63,16 +63,17 @@ div[class*="viewerBadge"] {display: none !important;}
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 .logo-img {
-    width: 140px;
-    height: 140px;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
     border: 3px solid #00e676;
     box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     object-fit: cover;
     animation: logoGlow 3s infinite alternate;
 }
@@ -84,7 +85,7 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .animated-title {
     font-family: 'Poppins', sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 900;
     text-transform: uppercase;
     background: linear-gradient(90deg, #00e676, #58a6ff, #00e676);
@@ -102,7 +103,7 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .animated-author {
     font-family: 'Great Vibes', cursive;
-    font-size: 34px;
+    font-size: 32px;
     color: #58a6ff;
     text-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
     margin-top: -2px;
@@ -119,14 +120,14 @@ div[class*="viewerBadge"] {display: none !important;}
     gap: 12px;
     justify-content: center;
     align-items: center;
-    margin-top: 8px;
+    margin-top: 5px;
     flex-wrap: wrap;
 }
 
 .header-badge {
     background: #161b22;
     border: 1px solid #30363d;
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 20px;
     color: #00e676;
     font-family: 'Orbitron', sans-serif;
@@ -139,7 +140,7 @@ div[class*="viewerBadge"] {display: none !important;}
 .header-phone {
     background: #161b22;
     border: 1px solid #30363d;
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 20px;
     color: #58a6ff;
     font-family: 'Poppins', sans-serif;
@@ -158,7 +159,7 @@ div[class*="viewerBadge"] {display: none !important;}
     border: 1px solid #30363d;
     border-radius: 12px;
     padding: 10px 5px;
-    margin: 15px 0;
+    margin: 10px 0;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
@@ -186,13 +187,13 @@ div[class*="viewerBadge"] {display: none !important;}
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
-    margin: 15px 0; 
+    margin: 10px 0; 
 }
 
 .glow-circle-wrapper {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 130px;
+    height: 130px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -213,8 +214,8 @@ div[class*="viewerBadge"] {display: none !important;}
 }
 
 .glow-circle { 
-    width: 115px; 
-    height: 115px; 
+    width: 105px; 
+    height: 105px; 
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
@@ -237,12 +238,12 @@ div[class*="viewerBadge"] {display: none !important;}
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 55px;
+    height: 50px;
 }
 
 .candle {
     position: relative;
-    width: 12px;
+    width: 10px;
     border-radius: 2px;
     animation: candleBounce 1.5s ease-in-out infinite alternate;
 }
@@ -250,10 +251,10 @@ div[class*="viewerBadge"] {display: none !important;}
 .candle::before {
     content: '';
     position: absolute;
-    top: -10px;
-    left: 5px;
+    top: -8px;
+    left: 4px;
     width: 2px;
-    height: 30px;
+    height: 26px;
     background-color: currentColor;
     z-index: -1;
 }
@@ -270,22 +271,22 @@ div[class*="viewerBadge"] {display: none !important;}
     box-shadow: 0 0 12px #ff1744;
 }
 
-.candle-1 { height: 26px; animation-delay: 0s; }
-.candle-2 { height: 40px; animation-delay: 0.3s; }
-.candle-3 { height: 32px; animation-delay: 0.6s; }
+.candle-1 { height: 22px; animation-delay: 0s; }
+.candle-2 { height: 35px; animation-delay: 0.3s; }
+.candle-3 { height: 28px; animation-delay: 0.6s; }
 
 @keyframes candleBounce {
     0% { transform: translateY(0) scaleY(0.9); }
-    100% { transform: translateY(-5px) scaleY(1.1); }
+    100% { transform: translateY(-4px) scaleY(1.1); }
 }
 
 .signal-title { 
-    font-size: 26px; 
+    font-size: 24px; 
     font-weight: 900; 
     text-align: center; 
     letter-spacing: 1.5px; 
-    margin-top: 12px; 
-    margin-bottom: 8px; 
+    margin-top: 10px; 
+    margin-bottom: 5px; 
 }
 
 /* Metric Cards Styling */
@@ -293,21 +294,21 @@ div[class*="viewerBadge"] {display: none !important;}
     background-color: #161b22; 
     border: 1px solid #30363d; 
     border-radius: 12px; 
-    padding: 12px 8px; 
+    padding: 10px 6px; 
     text-align: center; 
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
-    margin-bottom: 10px; 
+    margin-bottom: 8px; 
 }
 .metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-.metric-val { color: #ffffff !important; font-size: 17px !important; font-weight: 800 !important; }
-.metric-sub { font-size: 12px; font-weight: 700; margin-top: 3px; }
+.metric-val { color: #ffffff !important; font-size: 16px !important; font-weight: 800 !important; }
+.metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
 
 /* Share Buttons Styling */
 .share-container {
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin: 15px 0;
+    margin: 12px 0;
 }
 
 .share-btn {
@@ -383,6 +384,38 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
+logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
+
+# Header Branding Section
+st.markdown(f"""
+<div class="logo-header-container">
+    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
+    <div class="animated-title">PSX Trading Wizards</div>
+    <div class="animated-author">By Ijaz Sardar</div>
+    <div class="header-info-strip">
+        <div class="header-badge" id="pktClock">🕒 Loading Pakistan Time...</div>
+        <a href="tel:+923007581169" class="header-phone">📞 +92 300 7581169</a>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Live Pakistan Digital Clock JavaScript Component
+clock_component_code = """
+<script>
+function updateClock() {
+    const options = { timeZone: 'Asia/Karachi', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    const formatter = new Intl.DateTimeFormat([], options);
+    const clockEl = parent.document.getElementById('pktClock');
+    if (clockEl) {
+        clockEl.innerText = "🕒 " + formatter.format(new Date());
+    }
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+"""
+components.html(clock_component_code, height=0)
+
 # Fetch quick data for the Scrolling Market Ticker
 ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
 ticker_html_items = ""
@@ -416,51 +449,19 @@ if ticker_html_items:
     </div>
     """, unsafe_allow_html=True)
 
-logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
-
-# Live Pakistan Digital Clock Component
-clock_component_code = """
-<div style="font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: bold; color: #00e676; text-align: center;" id="pktClock">Loading Pakistan Time...</div>
-<script>
-function updateClock() {
-    const options = { timeZone: 'Asia/Karachi', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-    const formatter = new Intl.DateTimeFormat([], options);
-    document.getElementById('pktClock').innerText = "🕒 " + formatter.format(new Date());
-}
-updateClock();
-setInterval(updateClock, 1000);
-</script>
-"""
-
-st.markdown(f"""
-<div class="logo-header-container">
-    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
-    <div class="animated-title">PSX Trading Wizards</div>
-    <div class="animated-author">By Ijaz Sardar</div>
-    <div class="header-info-strip">
-        <div class="header-badge">
-""", unsafe_allow_html=True)
-components.html(clock_component_code, height=30)
-st.markdown(f"""
-        </div>
-        <a href="tel:+923007581169" class="header-phone">📞 +92 300 7581169</a>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
 # Voice Search Control
-st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 voice_search_code = """
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
     <button id="micBtn" style="
         background: linear-gradient(135deg, #ff9100, #ff3d00);
         color: #fff;
         font-weight: bold;
         border: none;
-        padding: 10px 20px;
+        padding: 8px 18px;
         border-radius: 20px;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
         box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);
         display: flex;
         align-items: center;
@@ -468,7 +469,7 @@ voice_search_code = """
     ">
         🎙️ Speak Stock Name
     </button>
-    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click mic & speak stock name (e.g. 'Bitcoin', 'HBL', 'Fauji')</div>
+    <div id="statusText" style="color: #58a6ff; font-size: 11px; font-weight: 500;">Click mic & speak stock name (e.g. 'Bitcoin', 'HBL', 'Fauji')</div>
 </div>
 
 <script>
@@ -502,7 +503,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 }
 </script>
 """
-components.html(voice_search_code, height=90)
+components.html(voice_search_code, height=75)
 
 # Market Overview Expander Table
 with st.expander("📊 Market Overview & Live Summary", expanded=False):
@@ -557,7 +558,7 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
-st.markdown(f"<h5 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h5>", unsafe_allow_html=True)
+st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=30)
 def load_data(sym, p, i):
@@ -683,7 +684,7 @@ if df is not None and not df.empty:
         stop_loss = price - (1.0 * atr_val)
         target_price = price + (1.0 * atr_val)
         
-    # Market Pulse Counters (Simulated/Calculated)
+    # Market Pulse Counters
     b_count = 24 if "BUY" in sig else 18
     s_count = 12 if "SELL" in sig else 14
     h_count = 5
@@ -726,10 +727,10 @@ if df is not None and not df.empty:
             color: #000;
             font-weight: bold;
             border: none;
-            padding: 10px 22px;
+            padding: 8px 20px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
             transition: all 0.3s ease;
             display: flex;
@@ -754,7 +755,7 @@ if df is not None and not df.empty:
         }}
     }});
     </script>
-    """, height=50)
+    """, height=45)
 
     # Share Signal Links
     share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
@@ -776,7 +777,7 @@ if df is not None and not df.empty:
     chg_str = f"{'+' if price_change>=0 else ''}{price_change:,.2f} ({'+' if pct_change>=0 else ''}{pct_change:.2f}%)"
     
     card1 = f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{p_str}</div><div class="metric-sub" style="color: {chg_col};">{chg_str}</div></div>'
-    card2 = f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Auto Take-Profit</div></div>'
+    card2 = f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>'
     card3 = f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>'
     
     c1.markdown(card1, unsafe_allow_html=True)
