@@ -24,6 +24,37 @@ header {visibility: hidden !important; display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 .stAppViewContainerFooter {display: none !important;}
 
+/* Scrolling Live Market Ticker */
+.ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    border-top: 1px solid #30363d;
+    padding: 8px 0;
+    white-space: nowrap;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.ticker {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+}
+
+.ticker-item {
+    display: inline-block;
+    padding: 0 25px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+}
+
+@keyframes ticker {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+}
+
 /* Logo and Animated Header Section */
 .logo-header-container {
     display: flex;
@@ -272,16 +303,6 @@ div[class*="viewerBadge"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
-
-st.markdown(f"""
-<div class="logo-header-container">
-    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
-    <div class="animated-title">PSX Trading Wizards</div>
-    <div class="animated-author">By Ijaz Sardar</div>
-</div>
-""", unsafe_allow_html=True)
-
 symbols = {
     "KSE-100 Index": "^KS100",
     "Bitcoin (BTC-USD)": "BTC-USD",
@@ -325,6 +346,49 @@ symbols = {
     "SSGC (Sui Southern Gas)": "SSGC.KA",
     "UBL (United Bank Limited)": "UBL.KA"
 }
+
+# Fetch quick data for the Scrolling Market Ticker
+ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
+ticker_html_items = ""
+for t_name, t_sym in symbols.items():
+    if t_sym in ticker_list:
+        try:
+            df_t = yf.download(t_sym, period="3d", interval="1d", progress=False)
+            if df_t is not None and not df_t.empty:
+                if isinstance(df_t.columns, pd.MultiIndex):
+                    df_t.columns = df_t.columns.get_level_values(0)
+                cp = df_t['Close'].iloc[-1]
+                pp = df_t['Close'].iloc[-2] if len(df_t) > 1 else cp
+                if isinstance(cp, pd.Series): cp = cp.iloc[0]
+                if isinstance(pp, pd.Series): pp = pp.iloc[0]
+                chg = cp - pp
+                pct = (chg / pp) * 100 if pp != 0 else 0
+                col = "#00e676" if chg >= 0 else "#ff1744"
+                sign = "+" if chg >= 0 else ""
+                short_name = t_name.split("(")[0].strip()
+                ticker_html_items += f'<div class="ticker-item">{short_name}: <span style="color: {col};">{float(cp):,.2f} ({sign}{pct:.2f}%)</span></div>'
+        except Exception:
+            pass
+
+if ticker_html_items:
+    st.markdown(f"""
+    <div class="ticker-wrap">
+        <div class="ticker">
+            {ticker_html_items}
+            {ticker_html_items}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
+
+st.markdown(f"""
+<div class="logo-header-container">
+    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
+    <div class="animated-title">PSX Trading Wizards</div>
+    <div class="animated-author">By Ijaz Sardar</div>
+</div>
+""", unsafe_allow_html=True)
 
 # Voice Search Control
 st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
