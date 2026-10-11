@@ -10,25 +10,25 @@ st.markdown("""
 
 @keyframes pulseGlow {
     0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
-    50% { transform: scale(1.06); box-shadow: 0 0 40px rgba(255, 145, 0, 0.9); }
+    50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 145, 0, 0.8); }
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
 
 .anim-circle {
-    width: 160px;
-    height: 160px;
+    width: 170px;
+    height: 170px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 60px;
+    font-size: 65px;
     background-color: #161b22;
     margin: 0 auto 15px auto;
     animation: pulseGlow 2s infinite ease-in-out;
 }
 
 .signal-title { font-size: 36px; font-weight: 900; text-align: center; letter-spacing: 2px; }
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 15px; }
 .metric-label { color: #58a6ff; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
 .metric-val { color: #ffffff !important; font-size: 28px !important; font-weight: 800 !important; }
 
@@ -36,7 +36,7 @@ st.markdown("""
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 .stDeployButton {display: none;}
-div[data-testid="stDecoration"] {display: hidden;}
+div[data-testid="stDecoration"] {display: none;}
 header {visibility: hidden;}
 [data-testid="stFooter"] {display: none !important;}
 iframe {color-scheme: dark;}
@@ -90,40 +90,6 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Voice Assistant Widget in Sidebar
-st.sidebar.markdown("---")
-st.sidebar.markdown("🎙️ **Voice Assistant**")
-voice_html = """
-<div style="background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid #30363d; text-align: center;">
-    <button onclick="startListening()" style="background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">🎙️ Speak Command</button>
-    <p id="voice-status" style="color: #8b949e; font-size: 12px; margin-top: 8px;">Tap & speak market name</p>
-</div>
-<script>
-function startListening() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Speech Recognition not supported in this browser.");
-        return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    document.getElementById("voice-status").innerText = "Listening...";
-    
-    recognition.onresult = function(event) {
-        const speechToText = event.results[0][0].transcript.toLowerCase();
-        document.getElementById("voice-status").innerText = "Heard: " + speechToText;
-    };
-    
-    recognition.onerror = function() {
-        document.getElementById("voice-status").innerText = "Try again.";
-    };
-    
-    recognition.start();
-}
-</script>
-"""
-st.sidebar.markdown(voice_html, unsafe_allow_html=True)
-
 sel_name = st.sidebar.selectbox("Select Market / Share", list(symbols.keys()))
 ticker = symbols[sel_name]
 
@@ -132,8 +98,7 @@ tf_map = {
     "Weekly (1W)": ("2y", "1wk"),
     "1 Hour": ("5d", "60m"),
     "15 Minutes": ("5d", "15m"),
-    "5 Minutes": ("1d", "5m"),
-    "1 Minute": ("1d", "1m")
+    "5 Minutes": ("1d", "5m")
 }
 
 sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
@@ -146,13 +111,9 @@ def load_data(sym, p, i):
     try:
         df_test = yf.download(sym, period=p, interval=i, progress=False)
         if df_test is None or df_test.empty or len(df_test) < 5:
-            # Fallback to standard daily or global index if regional ticker fails
             df_test = yf.download(sym, period="6mo", interval="1d", progress=False)
-        
         if df_test is None or df_test.empty or len(df_test) < 5:
-            # Ultimate fallback to S&P 500 if specific ticker has no internet feed
             df_test = yf.download("^GSPC", period="6mo", interval="1d", progress=False)
-            
         return df_test
     except:
         return yf.download("^GSPC", period="6mo", interval="1d", progress=False)
@@ -204,21 +165,6 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
     
-    # Text-to-Speech Button for Signal
-    speech_text = f"The current signal for {sel_name} is {sig}. Live price is {price:.2f}."
-    tts_html = f"""
-    <div style="text-align: center; margin-bottom: 25px;">
-        <button onclick="speakSignal()" style="background: #1f6feb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🔊 Listen to Signal</button>
-    </div>
-    <script>
-    function speakSignal() {{
-        const utterance = new SpeechSynthesisUtterance("{speech_text}");
-        window.speechSynthesis.speak(utterance);
-    }}
-    </script>
-    """
-    st.markdown(tts_html, unsafe_allow_html=True)
-    
     c1, c2, c3 = st.columns(3)
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
     
@@ -241,4 +187,4 @@ if df is not None and not df.empty:
     st.write("- **EMA 50:** " + f"{float(ema.iloc[-1]):,.2f}")
     st.write("- **MACD Line:** " + f"{m_val:.2f}" + " | **Signal Line:** " + f"{s_val:.2f}")
 else:
-    st.warning("⚠️ Market data loading. Please try switching between different shares or timeframes.")
+    st.warning("⚠️ Data load karne mein masla aa raha hai. Baraye meharbani doosra share ya timeframe select karein.")
