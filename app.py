@@ -22,6 +22,15 @@ header {visibility: hidden !important; display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 .stAppViewContainerFooter {display: none !important;}
 
+/* Hide Streamlit Cloud floating badges */
+div[class*="styles_viewerBadge"],
+div[data-testid="stStatusWidget"],
+.stBadge,
+[data-testid="stHeader"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 /* Logo and Animated Header Section */
 .logo-header-container {
     display: flex;
@@ -91,8 +100,8 @@ div[class*="viewerBadge"] {display: none !important;}
 
 .glow-circle-wrapper {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,15 +122,14 @@ div[class*="viewerBadge"] {display: none !important;}
 }
 
 .glow-circle { 
-    width: 120px; 
-    height: 120px; 
+    width: 125px; 
+    height: 125px; 
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 48px; 
     background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
-    box-shadow: 0 0 25px var(--glow-color, rgba(255, 145, 0, 0.5));
+    box-shadow: 0 0 30px var(--glow-color, rgba(255, 145, 0, 0.5));
     border: 3px solid var(--signal-color, #ff9100);
     animation: pulseGlow 1.8s ease-in-out infinite alternate;
     z-index: 2;
@@ -130,6 +138,54 @@ div[class*="viewerBadge"] {display: none !important;}
 @keyframes pulseGlow {
     0% { transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); filter: drop-shadow(0 0 5px var(--signal-color)); }
     100% { transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); filter: drop-shadow(0 0 15px var(--signal-color)); }
+}
+
+/* Custom Animated Candlestick Graphics */
+.candle-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 60px;
+}
+
+.candle {
+    position: relative;
+    width: 12px;
+    border-radius: 2px;
+    animation: candleBounce 1.5s ease-in-out infinite alternate;
+}
+
+.candle::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 5px;
+    width: 2px;
+    height: 32px;
+    background-color: currentColor;
+    z-index: -1;
+}
+
+.candle-green {
+    background-color: #00e676;
+    color: #00e676;
+    box-shadow: 0 0 12px #00e676;
+}
+
+.candle-red {
+    background-color: #ff1744;
+    color: #ff1744;
+    box-shadow: 0 0 12px #ff1744;
+}
+
+.candle-1 { height: 28px; animation-delay: 0s; }
+.candle-2 { height: 42px; animation-delay: 0.3s; }
+.candle-3 { height: 35px; animation-delay: 0.6s; }
+
+@keyframes candleBounce {
+    0% { transform: translateY(0) scaleY(0.9); }
+    100% { transform: translateY(-6px) scaleY(1.1); }
 }
 
 .signal-title { 
@@ -300,38 +356,65 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Signal Logic & Sleek Trend Icons
+    # Animated Green and Red Candlestick Graphics
+    green_candles_html = '''
+    <div class="candle-box">
+        <div class="candle candle-green candle-1"></div>
+        <div class="candle candle-green candle-2"></div>
+        <div class="candle candle-green candle-3"></div>
+    </div>
+    '''
+    
+    red_candles_html = '''
+    <div class="candle-box">
+        <div class="candle candle-red candle-1"></div>
+        <div class="candle candle-red candle-2"></div>
+        <div class="candle candle-red candle-3"></div>
+    </div>
+    '''
+    
+    neutral_candles_html = '''
+    <div class="candle-box">
+        <div class="candle candle-green candle-1"></div>
+        <div class="candle candle-red candle-2"></div>
+        <div class="candle candle-green candle-3"></div>
+    </div>
+    '''
+    
+    # Signal Logic & Animated Graphics Assignment
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
         col = "#00e676"  # Vibrant Green
-        icon = "🚀"  # Rocket / Upward Impulse
+        candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
         col = "#00e676"  # Vibrant Green
-        icon = "📈"  # Upward Chart
+        candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
         col = "#ff1744"  # Vibrant Red
-        icon = "📉"  # Downward Chart
+        candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"  # Vibrant Red
-        icon = "⚠️"  # Warning / Drop Indicator
+        candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     else:
         sig = "HOLD / NEUTRAL"
         col = "#ff9100"  # Vibrant Orange
-        icon = "⚖️"  # Balance scale
+        candle_icon_html = neutral_candles_html
         glow_rgba = "rgba(255, 145, 0, 0.8)"
     
     st.markdown(f'''
     <div class="circle-container">
         <div class="glow-circle-wrapper">
             <div class="glow-circle-ring" style="--signal-color: {col};"></div>
-            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba};">{icon}</div>
+            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba};">
+                {candle_icon_html}
+            </div>
         </div>
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
