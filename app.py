@@ -44,7 +44,40 @@ footer[data-testid="stFooter"] {display: none !important; visibility: hidden !im
 div[data-testid="stToolbar"] {display: none !important; visibility: hidden !important;}
 a[href*="streamlit.io"] {display: none !important; visibility: hidden !important;}
 div[class*="stAppViewContainerFooter"] {display: none !important; visibility: hidden !important;}
+iframe[title="data-testid"] {display: none !important;}
+[data-testid="stViewerBadge"] {display: none !important; visibility: hidden !important;}
+.viewerBadge_container__1A51n {display: none !important;}
 </style>
+
+<script>
+// JavaScript code to actively monitor and remove Streamlit badges and red footers
+const removeBadges = () => {
+    // Select all potential badge elements
+    const selectors = [
+        'footer',
+        '[data-testid="stFooter"]',
+        '[data-testid="stViewerBadge"]',
+        '.stAppBadge',
+        'div[class*="viewerBadge"]',
+        'div[class*="hosted-with-streamlit"]',
+        'a[href*="streamlit.io"]',
+        'div[class*="stAppViewContainerFooter"]'
+    ];
+    
+    selectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            el.remove();
+        });
+    });
+};
+
+// Run badge removal continuously using mutation observer
+const observer = new MutationObserver(removeBadges);
+observer.observe(document.body, { childList: true, subtree: true });
+
+// Initial execution
+setInterval(removeBadges, 300);
+</script>
 """, unsafe_allow_html=True)
 
 # Header Section
