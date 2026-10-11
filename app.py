@@ -1,4 +1,3 @@
-
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -8,9 +7,37 @@ st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="w
 st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
-.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 25px 0; }
-.glow-circle { width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 65px; background-color: #161b22; margin-bottom: 15px; }
+
+@keyframes pulseGlow {
+    0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+    50% { transform: scale(1.06); box-shadow: 0 0 45px rgba(255, 145, 0, 0.9); }
+    100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+}
+
+.anim-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 65px;
+    background-color: #161b22;
+    margin: 0 auto 15px auto;
+    animation: pulseGlow 2s infinite ease-in-out;
+}
+
 .signal-title { font-size: 38px; font-weight: 900; text-align: center; letter-spacing: 2px; }
+.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
+.metric-label { color: #58a6ff; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+.metric-val { color: #ffffff !important; font-size: 28px !important; font-weight: 800 !important; }
+
+/* Hiding Streamlit Branding & Footer Badges Completely */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+.stDeployButton {display: none;}
+div[data-testid="stDecoration"] {display: none;}
+header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -56,6 +83,41 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
+# Voice Assistant Widget in Sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("🎙️ **Voice Assistant**")
+voice_html = """
+<div style="background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid #30363d; text-align: center;">
+    <button onclick="startListening()" style="background: #238636; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">🎙️ Speak Command</button>
+    <p id="voice-status" style="color: #8b949e; font-size: 12px; margin-top: 8px;">Click & say symbol name (e.g., "HBL", "Gold", "Bitcoin")</p>
+</div>
+<script>
+function startListening() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Speech Recognition is not supported in this browser.");
+        return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    document.getElementById("voice-status").innerText = "Listening... Speak now!";
+    
+    recognition.onresult = function(event) {
+        const speechToText = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("voice-status").innerText = "Heard: " + speechToText;
+        // Search in select elements or trigger navigation if possible
+    };
+    
+    recognition.onerror = function() {
+        document.getElementById("voice-status").innerText = "Error occurred, try again.";
+    };
+    
+    recognition.start();
+}
+</script>
+"""
+st.sidebar.markdown(voice_html, unsafe_allow_html=True)
+
 sel_name = st.sidebar.selectbox("Select Market / Share", list(symbols.keys()))
 ticker = symbols[sel_name]
 
@@ -72,7 +134,7 @@ tf_map = {
 sel_tf = st.sidebar.selectbox("Select Timeframe", list(tf_map.keys()))
 period, interval = tf_map[sel_tf]
 
-st.markdown("### Analyzing Market: " + sel_name + " (" + sel_tf + ")")
+st.markdown("<h3 style='text-align: center; color: #58a6ff;'>Analyzing Market: " + sel_name + " (" + sel_tf + ")</h3>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=60)
 def load_data(sym, p, i):
@@ -109,29 +171,53 @@ if df is not None and not df.empty and len(df) >= 14:
         sig = "BUY"
         col = "#00e676"
         icon = "↗"
-        glow = "0 0 50px rgba(0, 230, 118, 0.85)"
     elif curr_rsi > 65 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"
         icon = "↘"
-        glow = "0 0 50px rgba(255, 23, 68, 0.85)"
     else:
         sig = "HOLD / NEUTRAL"
         col = "#ff9100"
         icon = "➔"
-        glow = "0 0 50px rgba(255, 145, 0, 0.85)"
     
-    st.markdown('<div class="circle-container"><div class="glow-circle" style="border: 5px solid ' + col + '; color: ' + col + '; box-shadow: ' + glow + ';">' + icon + '</div><div class="signal-title" style="color: ' + col + ';">' + sig + '</div></div>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f'''
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 25px 0;">
+        <div class="anim-circle" style="border: 5px solid {col}; color: {col};">{icon}</div>
+        <div class="signal-title" style="color: {col};">{sig}</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Text-to-Speech Button for Signal
+    speech_text = f"The current signal for {sel_name} is {sig}. Live price is {price:.2f}."
+    tts_html = f"""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button onclick="speakSignal()" style="background: #1f6feb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🔊 Listen to Signal</button>
+    </div>
+    <script>
+    function speakSignal() {{
+        const utterance = new SpeechSynthesisUtterance("{speech_text}");
+        window.speechSynthesis.speak(utterance);
+    }}
+    </script>
+    """
+    st.markdown(tts_html, unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
     
-    c1.metric("Live Price", cur_sym + f"{price:,.2f}")
-    c2.metric("RSI (14)", f"{curr_rsi:.2f}")
+    p_str = f"{price:,.2f}"
+    r_str = f"{curr_rsi:.2f}"
     
-    t_text = "Bullish" if m_val > s_val else "Bearish"
-    c3.metric("MACD Trend", t_text)
+    card1 = '<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">' + cur_sym + p_str + '</div></div>'
+    card2 = '<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">' + r_str + '</div></div>'
+    
+    t_col = "#00e676" if m_val > s_val else "#ff1744"
+    t_txt = "Bullish" if m_val > s_val else "Bearish"
+    card3 = '<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: ' + t_col + ';">' + t_txt + '</div></div>'
+    
+    c1.markdown(card1, unsafe_allow_html=True)
+    c2.markdown(card2, unsafe_allow_html=True)
+    c3.markdown(card3, unsafe_allow_html=True)
     
     st.markdown("---")
     st.subheader("📊 Technical Indicators Summary")
