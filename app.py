@@ -3,11 +3,15 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
+# Configure Streamlit page
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="wide")
 
 st.markdown("""
 <style>
+/* Main dark background styling */
 .stApp { background-color: #0d1117; color: #ffffff; }
+
+/* Circular glowing indicator styling */
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
 .glow-circle { 
     width: 130px; height: 130px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; background-color: #161b22; margin-bottom: 10px;
@@ -19,22 +23,31 @@ st.markdown("""
     100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
 }
 .signal-title { font-size: 26px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 12px; }
+
+/* Metric Cards Styling */
 .metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Hide Streamlit branding and footer completely */
+/* Complete removal of Streamlit branding, footer, red badge, and header widgets */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
-.stDeployButton {display: none !important;}
-div[data-testid="stDecoration"] {display: none !important;}
-[data-testid="stFooter"] {display: none !important;}
-div[class*="viewerBadge"] {display: none !important;}
-div[class*="streamlitLogo"] {display: none !important;}
-div[class*="hosted-with-streamlit"] {display: none !important;}
+header {visibility: hidden !important; display: none !important;}
+.stDeployButton {display: none !important; visibility: hidden !important;}
+div[data-testid="stDecoration"] {display: none !important; visibility: hidden !important;}
+[data-testid="stFooter"] {display: none !important; visibility: hidden !important;}
+div[class*="viewerBadge"] {display: none !important; visibility: hidden !important;}
+div[class*="streamlitLogo"] {display: none !important; visibility: hidden !important;}
+div[class*="hosted-with-streamlit"] {display: none !important; visibility: hidden !important;}
+.stAppBadge {display: none !important; visibility: hidden !important;}
+footer[data-testid="stFooter"] {display: none !important; visibility: hidden !important;}
+div[data-testid="stToolbar"] {display: none !important; visibility: hidden !important;}
+a[href*="streamlit.io"] {display: none !important; visibility: hidden !important;}
+div[class*="stAppViewContainerFooter"] {display: none !important; visibility: hidden !important;}
 </style>
 """, unsafe_allow_html=True)
 
+# Header Section
 st.markdown("<h2 style='text-align: center; color: #58a6ff;'>📈 PSX Trading Wizards</h2>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #8b949e; font-size: 13px;'>By Ijaz Sardar</p>", unsafe_allow_html=True)
 st.markdown("---")
@@ -83,7 +96,6 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Main screen top controls for instant mobile navigation
 col_sel1, col_sel2 = st.columns(2)
 with col_sel1:
     sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
@@ -92,6 +104,7 @@ with col_sel2:
 
 ticker = symbols[sel_name]
 
+# Timeframe Mapping
 tf_map = {
     "Daily (1D)": ("6mo", "1d"),
     "Weekly (1W)": ("2y", "1wk"),
@@ -110,13 +123,13 @@ def load_data(sym, p, i):
     df_test = None
     try:
         df_test = yf.download(sym, period=p, interval=i, progress=False)
-    except:
+    except Exception:
         pass
         
     if df_test is None or df_test.empty or len(df_test) < 3:
         try:
             df_test = yf.download("^KS100", period="6mo", interval="1d", progress=False)
-        except:
+        except Exception:
             pass
             
     if df_test is None or df_test.empty or len(df_test) < 3:
@@ -153,7 +166,7 @@ if df is not None and not df.empty:
     macd = exp1 - exp2
     sig_line = macd.ewm(span=9, adjust=False).mean()
     
-    # Bollinger Bands Calculation (20 period, 2 std dev)
+    # Bollinger Bands Calculation
     bb_period = min(20, len(close))
     bb_sma = close.rolling(bb_period).mean()
     bb_std = close.rolling(bb_period).std()
@@ -168,7 +181,7 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Signal Logic combining RSI, MACD & Bollinger Bands
+    # Trading Signal Decision Logic
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
         col = "#00e676"
