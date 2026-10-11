@@ -22,15 +22,6 @@ header {visibility: hidden !important; display: none !important;}
 div[class*="viewerBadge"] {display: none !important;}
 .stAppViewContainerFooter {display: none !important;}
 
-/* Hide Streamlit Cloud floating badges */
-div[class*="styles_viewerBadge"],
-div[data-testid="stStatusWidget"],
-.stBadge,
-[data-testid="stHeader"] {
-    display: none !important;
-    visibility: hidden !important;
-}
-
 /* Logo and Animated Header Section */
 .logo-header-container {
     display: flex;
@@ -89,7 +80,7 @@ div[data-testid="stStatusWidget"],
     100% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* Enhanced Center Animated Indicator */
+/* Enhanced Center Animated Candlestick Indicator */
 .circle-container { 
     display: flex; 
     flex-direction: column; 
@@ -322,6 +313,27 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 </script>
 """
 components.html(voice_search_code, height=95)
+
+with st.expander("📊 View All Market Overview Summary (Multi-Stock Table)", expanded=False):
+    st.markdown("Live summary of major indices & top active shares:")
+    overview_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA"]
+    overview_data = []
+    for s_name, s_ticker in symbols.items():
+        if s_ticker in overview_list:
+            try:
+                df_ov = yf.download(s_ticker, period="5d", interval="1d", progress=False)
+                if df_ov is not None and not df_ov.empty:
+                    if isinstance(df_ov.columns, pd.MultiIndex):
+                        df_ov.columns = df_ov.columns.get_level_values(0)
+                    c_ov = df_ov['Close'].iloc[-1]
+                    if isinstance(c_ov, pd.Series):
+                        c_ov = c_ov.iloc[0]
+                    overview_data.append({"Share": s_name, "Price": float(c_ov)})
+            except Exception:
+                pass
+    if overview_data:
+        df_summary = pd.DataFrame(overview_data)
+        st.dataframe(df_summary, use_container_width=True)
 
 search_query = st.text_input("🔍 Type to Search Stock / Share Name:", "")
 filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
