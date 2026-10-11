@@ -42,8 +42,8 @@ div[data-testid="stStatusWidget"],
 }
 
 .logo-img {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
     border: 3px solid #00e676;
     box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
@@ -77,7 +77,7 @@ div[data-testid="stStatusWidget"],
 
 .animated-author {
     font-family: 'Great Vibes', cursive;
-    font-size: 32px;
+    font-size: 36px;
     color: #58a6ff;
     text-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
     margin-top: -2px;
@@ -268,8 +268,7 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Voice Command Stock Search Component
-st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search Share Name</h6>", unsafe_allow_html=True)
+st.markdown("<h6 style='text-align: center; color: #00e676;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 voice_search_code = """
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
     <button id="micBtn" style="
@@ -288,7 +287,7 @@ voice_search_code = """
     ">
         🎙️ Speak Stock Name
     </button>
-    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click microphone & say share name (e.g., 'Bitcoin' or 'Fauji')</div>
+    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 500;">Click microphone & say share name (e.g., 'Bitcoin', 'HBL', 'Fauji')</div>
 </div>
 
 <script>
@@ -309,8 +308,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     recognition.onresult = function(event) {
         const spokenText = event.results[0][0].transcript.toLowerCase();
-        statusText.innerText = "You said: " + spokenText;
-        statusText.style.color = "#58a6ff";
+        statusText.innerText = "You said: " + spokenText + ". Type this in search filter below!";
+        statusText.style.color = "#00e676";
     };
 
     recognition.onerror = function(event) {
@@ -322,9 +321,15 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 }
 </script>
 """
-components.html(voice_search_code, height=90)
+components.html(voice_search_code, height=95)
 
-sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
+search_query = st.text_input("🔍 Type to Search Stock / Share Name:", "")
+filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
+
+if not filtered_symbols:
+    filtered_symbols = symbols
+
+sel_name = st.selectbox("Select Market / Share", list(filtered_symbols.keys()))
 sel_tf = st.selectbox("Select Timeframe", ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
 
 ticker = symbols[sel_name]
@@ -412,37 +417,33 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Animated Green and Red Candlestick Graphics
     green_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
-    
     red_candles_html = """<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>"""
-    
     neutral_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
     
-    # Signal Logic & Animated Graphics Assignment
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
-        col = "#00e676"  # Vibrant Green
+        col = "#00e676"
         candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
-        col = "#00e676"  # Vibrant Green
+        col = "#00e676"
         candle_icon_html = green_candles_html
         glow_rgba = "rgba(0, 230, 118, 0.85)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
-        col = "#ff1744"  # Vibrant Red
+        col = "#ff1744"
         candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
-        col = "#ff1744"  # Vibrant Red
+        col = "#ff1744"
         candle_icon_html = red_candles_html
         glow_rgba = "rgba(255, 23, 68, 0.85)"
     else:
         sig = "HOLD / NEUTRAL"
-        col = "#ff9100"  # Vibrant Orange
+        col = "#ff9100"
         candle_icon_html = neutral_candles_html
         glow_rgba = "rgba(255, 145, 0, 0.8)"
     
@@ -458,7 +459,6 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
     
-    # Audio Speech Component
     signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
     
     components.html(f"""
