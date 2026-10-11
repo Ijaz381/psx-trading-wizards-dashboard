@@ -2,6 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import streamlit.components.v1 as components
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
@@ -145,25 +146,6 @@ st.markdown("""
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
 
-/* Voice Command Button Styling */
-.voice-btn {
-    background: linear-gradient(135deg, #00e676, #00b0ff);
-    color: #000;
-    font-weight: bold;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    margin-top: 8px;
-    font-size: 14px;
-    box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
-    transition: all 0.3s ease;
-}
-.voice-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(0, 230, 118, 0.8);
-}
-
 /* Hide Streamlit default headers/footers */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
@@ -283,6 +265,9 @@ if df is not None and not df.empty:
     if isinstance(close, pd.DataFrame):
         close = close.iloc[:, 0]
     
+    # Currency Determination
+    cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
+    
     # RSI Calculation
     delta = close.diff()
     gain = delta.where(delta > 0, 0).rolling(14).mean()
@@ -351,10 +336,8 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
     
-    # Audio Speech Button fix using HTML iFrame component for reliable SpeechSynthesis execution
+    # Audio Speech Button component
     signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
-    
-    import streamlit.components.v1 as components
     
     components.html(f"""
     <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
@@ -394,7 +377,6 @@ if df is not None and not df.empty:
     """, height=60)
     
     c1, c2, c3 = st.columns(3)
-    cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
     
     p_str = f"{price:,.2f}"
     r_str = f"{curr_rsi:.2f}"
