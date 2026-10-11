@@ -71,23 +71,98 @@ st.markdown("""
     100% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* Circular glowing indicator styling */
-.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; }
+/* Enhanced Center Animated Circle Indicator */
+.circle-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    margin: 20px 0; 
+}
+
+.glow-circle-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glow-circle-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px dashed var(--signal-color, #ff9100);
+    animation: rotateRing 8s linear infinite;
+}
+
+@keyframes rotateRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .glow-circle { 
-    width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; background-color: #161b22; margin-bottom: 10px;
-    animation: pulseGlow 2s infinite;
+    width: 120px; 
+    height: 120px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 50px; 
+    background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
+    box-shadow: 0 0 25px var(--glow-color, rgba(255, 145, 0, 0.5));
+    border: 3px solid var(--signal-color, #ff9100);
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+    z-index: 2;
 }
+
 @keyframes pulseGlow {
-    0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 145, 0, 0.8); }
-    100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+    0% { transform: scale(0.96); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); }
+    100% { transform: scale(1.04); box-shadow: 0 0 35px var(--glow-color, rgba(255, 145, 0, 0.9)); }
 }
-.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1px; margin-bottom: 10px; }
+
+.signal-title { 
+    font-size: 26px; 
+    font-weight: 900; 
+    text-align: center; 
+    letter-spacing: 1.5px; 
+    margin-top: 15px; 
+    margin-bottom: 10px; 
+}
 
 /* Metric Cards Styling */
-.metric-card { background-color: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); margin-bottom: 8px; }
+.metric-card { 
+    background-color: #161b22; 
+    border: 2px solid #30363d; 
+    border-radius: 12px; 
+    padding: 12px; 
+    text-align: center; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
+    margin-bottom: 8px; 
+}
 .metric-label { color: #58a6ff; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
+
+/* Voice Command Button Styling */
+.voice-btn {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 14px;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+    transition: all 0.3s ease;
+}
+.voice-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.8);
+}
 
 /* Hide Streamlit default headers/footers */
 #MainMenu {visibility: hidden !important; display: none !important;}
@@ -153,13 +228,11 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-# Main Screen Selection Menus
 sel_name = st.selectbox("Select Market / Share", list(symbols.keys()))
 sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "4 Hours", "1 Hour", "15 Minutes", "5 Minutes", "1 Minute"])
 
 ticker = symbols[sel_name]
 
-# Timeframe Mapping
 tf_map = {
     "Daily (1D)": ("6mo", "1d"),
     "Weekly (1W)": ("2y", "1wk"),
@@ -241,38 +314,57 @@ if df is not None and not df.empty:
     b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
     
-    # Trading Signal Decision Logic
+    # Signal Decision Logic
     if curr_rsi < 42 and price <= b_lower * 1.01:
         sig = "STRONG BUY"
         col = "#00e676"
         icon = "🚀"
-        glow = "0 0 35px rgba(0, 230, 118, 0.8)"
+        glow_rgba = "rgba(0, 230, 118, 0.8)"
     elif curr_rsi < 48 and m_val > s_val:
         sig = "BUY"
         col = "#00e676"
         icon = "↗"
-        glow = "0 0 35px rgba(0, 230, 118, 0.8)"
+        glow_rgba = "rgba(0, 230, 118, 0.8)"
     elif curr_rsi > 65 and price >= b_upper * 0.99:
         sig = "STRONG SELL"
         col = "#ff1744"
         icon = "⚠️"
-        glow = "0 0 35px rgba(255, 23, 68, 0.8)"
+        glow_rgba = "rgba(255, 23, 68, 0.8)"
     elif curr_rsi > 60 and m_val < s_val:
         sig = "SELL (SHORT)"
         col = "#ff1744"
         icon = "↘"
-        glow = "0 0 35px rgba(255, 23, 68, 0.8)"
+        glow_rgba = "rgba(255, 23, 68, 0.8)"
     else:
         sig = "HOLD / NEUTRAL"
         col = "#ff9100"
         icon = "➔"
-        glow = "0 0 35px rgba(255, 145, 0, 0.8)"
+        glow_rgba = "rgba(255, 145, 0, 0.8)"
     
     st.markdown(f'''
     <div class="circle-container">
-        <div class="glow-circle" style="border: 4px solid {col}; color: {col}; box-shadow: {glow};">{icon}</div>
+        <div class="glow-circle-wrapper">
+            <div class="glow-circle-ring" style="--signal-color: {col};"></div>
+            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba}; color: {col};">{icon}</div>
+        </div>
         <div class="signal-title" style="color: {col};">{sig}</div>
+        <button class="voice-btn" onclick="speakSignal('{sel_name}', '{sig}')">🔊 Listen Signal</button>
     </div>
+
+    <script>
+    function speakSignal(share, signal) {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var text = "Signal for " + share + " is " + signal;
+            var msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.95;
+            msg.pitch = 1.0;
+            window.speechSynthesis.speak(msg);
+        }} else {{
+            alert("Voice synthesis is not supported on this browser.");
+        }}
+    }}
+    </script>
     ''', unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
@@ -295,7 +387,6 @@ if df is not None and not df.empty:
     st.markdown("---")
     st.subheader(f"📈 {sel_name} Live Price Chart")
     
-    # Native Streamlit Chart (No Plotly requirement)
     chart_df = pd.DataFrame({
         'Price': close,
         'EMA 50': ema,
