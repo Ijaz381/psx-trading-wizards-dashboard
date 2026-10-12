@@ -18,7 +18,7 @@ st.markdown("""
 .ticker-wrap {
     width: 100%; overflow: hidden; background: #161b22;
     border-bottom: 1px solid #30363d; border-top: 1px solid #30363d;
-    padding: 8px 0; white-space: nowrap; box-sizing: border-box; margin: 5px 0 10px 0;
+    padding: 8px 0; white-space: nowrap; box-sizing: border-box; margin: 10px 0 15px 0;
 }
 .ticker { display: inline-block; animation: ticker 30s linear infinite; }
 .ticker-item { display: inline-block; padding: 0 25px; font-size: 13px; font-weight: 700; font-family: 'Poppins', sans-serif; }
@@ -26,11 +26,11 @@ st.markdown("""
 
 .news-banner {
     background: linear-gradient(90deg, #ff9100, #ff3d00); color: #fff; padding: 8px 12px;
-    border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 10px;
+    border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 12px;
     box-shadow: 0 0 15px rgba(255, 145, 0, 0.4);
 }
 
-.logo-header-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 2px; margin-bottom: 5px; }
+.logo-header-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 5px; margin-bottom: 10px; }
 .logo-img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #00e676; box-shadow: 0 0 25px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover; animation: logoGlow 3s infinite alternate; }
 @keyframes logoGlow { 0% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); } 100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(0, 230, 118, 0.95); } }
 
@@ -132,7 +132,7 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-# 📰 Live Flash News Banner
+# 📰 Flash News Banner
 st.markdown('<div class="news-banner">🚨 <b>PSX Flash Alert:</b> Market trends showing strong momentum. Monitor key support & resistance levels closely! Managed by Ijaz Sardar (+92 300 7581169)</div>', unsafe_allow_html=True)
 
 ticker_list = ["^KS100", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
@@ -325,7 +325,6 @@ if df is not None and not df.empty:
     </script>
     """, height=45)
 
-    # 📲 WhatsApp & Telegram Direct Broadcast Links
     share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
     tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
@@ -342,6 +341,18 @@ if df is not None and not df.empty:
     c1.markdown(f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{price:,.2f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.2f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
+
+    # 🧮 Position Size & Profit Calculator Expansion
+    with st.expander("🧮 Position Size & Trade Profit Calculator", expanded=False):
+        st.markdown("Calculate your potential investment returns and required capital:")
+        inv_capital = st.number_input("Enter Investment Capital (" + cur_sym.strip() + "):", min_value=1000.0, value=100000.0, step=5000.0)
+        if price > 0:
+            shares_qty = inv_capital / price
+            potential_profit = shares_qty * (target_price - price)
+            potential_loss = shares_qty * (price - stop_loss)
+            st.success(f"📊 **Suggested Shares / Units:** {shares_qty:,.2f}")
+            st.info(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
+            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
 
     # 🎛️ Custom Chart Indicator Toggles
     st.markdown("---")
