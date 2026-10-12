@@ -45,12 +45,35 @@ st.markdown("""
 .pulse-val { font-size: 18px; font-weight: 900; margin-top: 2px; }
 
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }
-.glow-circle { width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); box-shadow: 0 0 30px rgba(0, 230, 118, 0.6); border: 3px solid #00e676; }
-.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 5px; color: #00e676; }
+.glow-circle-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }
+.glow-circle-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px dashed var(--signal-color, #ff9100); animation: rotateRing 8s linear infinite; }
+@keyframes rotateRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.glow-circle { 
+    width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
+    box-shadow: 0 0 30px var(--glow-color, rgba(255, 145, 0, 0.5)); border: 3px solid var(--signal-color, #ff9100);
+    animation: pulseGlow 1.8s ease-in-out infinite alternate; z-index: 2;
+}
+@keyframes pulseGlow { 0% { transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); } 100% { transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); } }
+
+.candle-box { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; }
+.candle { position: relative; width: 10px; border-radius: 2px; animation: candleBounce 1.5s ease-in-out infinite alternate; }
+.candle::before { content: ''; position: absolute; top: -8px; left: 4px; width: 2px; height: 26px; background-color: currentColor; z-index: -1; }
+.candle-green { background-color: #00e676; color: #00e676; box-shadow: 0 0 12px #00e676; }
+.candle-red { background-color: #ff1744; color: #ff1744; box-shadow: 0 0 12px #ff1744; }
+.candle-1 { height: 22px; animation-delay: 0s; }
+.candle-2 { height: 35px; animation-delay: 0.3s; }
+.candle-3 { height: 28px; animation-delay: 0.6s; }
+@keyframes candleBounce { 0% { transform: translateY(0) scaleY(0.9); } 100% { transform: translateY(-4px) scaleY(1.1); } }
+
+.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 5px; }
+
 .metric-card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; }
 .metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: #ffffff !important; font-size: 16px !important; font-weight: 800 !important; }
 .metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
+
 .share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
 .share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }
 .btn-wa { background: #25D366; }
@@ -245,9 +268,9 @@ if df is not None and not df.empty:
     atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
     if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
 
-    green_c = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
-    red_c = """<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>"""
-    neut_c = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
+    green_c = '<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>'
+    red_c = '<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>'
+    neut_c = '<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>'
 
     if curr_rsi < 40 and curr_stoch < 20 and m_val > s_val:
         sig, col, icon, glow = "STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)"
@@ -272,7 +295,10 @@ if df is not None and not df.empty:
 
     st.markdown(f'''
     <div class="circle-container">
-        <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow};">{icon}</div>
+        <div class="glow-circle-wrapper">
+            <div class="glow-circle-ring" style="--signal-color: {col};"></div>
+            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow};">{icon}</div>
+        </div>
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
     ''', unsafe_allow_html=True)
@@ -362,9 +388,4 @@ if df is not None and not df.empty:
     if show_ema50:
         fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
     if show_upper_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    if show_lower_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
-        
-    fig.update_layout(template="plotly_dark", paper_bgcolor="#0d1117", plot_bgcolor="#161b22", margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    st.plotly_chart(fig, use_container_width=True)
+        fig.add_trace(go.Scatter(x=df.
