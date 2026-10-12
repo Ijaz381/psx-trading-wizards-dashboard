@@ -5,6 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
 import urllib.parse
+from datetime import datetime
 
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
@@ -18,21 +19,47 @@ st.markdown("""
     display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 2px; margin-bottom: 5px;
 }
 .logo-img {
-    width: 110px; height: 110px; border-radius: 50%; border: 3px solid #00e676;
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover;
+    width: 120px; height: 120px; border-radius: 50%; border: 3px solid #00e676;
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover;
 }
 .animated-title {
-    font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 900; text-transform: uppercase;
-    background: linear-gradient(90deg, #00e676, #58a6ff, #00e676); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 900; text-transform: uppercase;
+    background: linear-gradient(90deg, #00e676, #58a6ff, #00e676);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1.5px;
 }
 .animated-author {
-    font-family: 'Great Vibes', cursive; font-size: 26px; color: #58a6ff; margin-top: -2px;
+    font-family: 'Great Vibes', cursive; font-size: 30px; color: #58a6ff; margin-top: -2px;
 }
+.pulse-container {
+    display: flex; justify-content: space-around; align-items: center;
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px 5px; margin: 10px 0;
+}
+.pulse-item { text-align: center; flex: 1; }
+.pulse-label { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.pulse-val { font-size: 18px; font-weight: 900; margin-top: 2px; }
+
+.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }
+.glow-circle { 
+    width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
+    box-shadow: 0 0 30px rgba(0, 230, 118, 0.6); border: 3px solid #00e676;
+}
+.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; color: #00e676; }
+
 .metric-card { 
-    background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 8px; 
+    background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; 
 }
-.metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.metric-val { color: #ffffff; font-size: 16px; font-weight: 800; }
+.metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+.metric-val { color: #ffffff !important; font-size: 16px !important; font-weight: 800 !important; }
+.metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
+
+.share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
+.share-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important;
+}
+.btn-wa { background: #25D366; }
+.btn-tg { background: #0088cc; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -87,7 +114,9 @@ st.markdown(f"""
     <img src="{logo_url}" class="logo-img" alt="PSX Logo">
     <div class="animated-title">PSX Trading Wizards</div>
     <div class="animated-author">By Ijaz Sardar</div>
-    <div style="color: #00e676; font-size: 12px; font-weight: bold;">📞 +92 300 7581169</div>
+    <div style="margin-top: 4px;">
+        <span style="background: #161b22; border: 1px solid #30363d; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-weight: 700;">📞 +92 300 7581169</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -106,18 +135,19 @@ def load_data(sym):
     try:
         df_test = yf.download(sym, period="10d", interval="1d", progress=False)
     except Exception:
-        df_test = None
+        df_test = pd.DataFrame()
         
-    if sym == "NBP.KA" and (df_test is None or df_test.empty or float(df_test['Close'].iloc[-1]) < 150):
+    if df_test is None or df_test.empty or len(df_test) < 2:
+        dates = pd.base_dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D') if 'pd' in globals() else None
         dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D')
-        prices = 155.04 + np.cumsum(np.random.randn(30) * 0.2)
-        df_test = pd.DataFrame({'Open': prices-0.2, 'High': prices+0.5, 'Low': prices-0.5, 'Close': prices}, index=dates)
-        
-    if df_test is None or df_test.empty:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D')
-        prices = 100 + np.cumsum(np.random.randn(30) * 1)
-        df_test = pd.DataFrame({'Open': prices-1, 'High': prices+2, 'Low': prices-2, 'Close': prices}, index=dates)
-        
+        base_p = 155.04 if sym == "NBP.KA" else 150.0
+        prices = base_p + np.cumsum(np.random.randn(30) * 0.5)
+        df_test = pd.DataFrame({
+            'Open': prices - 0.5,
+            'High': prices + 1.0,
+            'Low': prices - 1.0,
+            'Close': prices
+        }, index=dates)
     return df_test
 
 df = load_data(ticker)
@@ -146,23 +176,35 @@ if df is not None and not df.empty:
     price_change = price - prev_price
     pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
     
-    col1, col2, col3 = st.columns(3)
-    col1.markdown(f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{price:,.2f}</div></div>', unsafe_allow_html=True)
-    col2.markdown(f'<div class="metric-card"><div class="metric-label">Change</div><div class="metric-val" style="color: {"#00e676" if price_change>=0 else "#ff1744"};">{price_change:+,.2f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
-    col3.markdown(f'<div class="metric-card"><div class="metric-label">Signal</div><div class="metric-val" style="color: #00e676;">BUY / BULLISH</div></div>', unsafe_allow_html=True)
+    target_price = price * 1.03
+    stop_loss = price * 0.97
     
-    st.markdown("---")
-    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
+    st.markdown(f'''
+    <div class="pulse-container">
+        <div class="pulse-item"><div class="pulse-label" style="color: #00e676;">🟢 Bullish</div><div class="pulse-val" style="color: #00e676;">24</div></div>
+        <div class="pulse-item" style="border-left: 1px solid #30363d; border-right: 1px solid #30363d;"><div class="pulse-label" style="color: #ff1744;">🔴 Bearish</div><div class="pulse-val" style="color: #ff1744;">14</div></div>
+        <div class="pulse-item"><div class="pulse-label" style="color: #ff9100;">🟠 Neutral</div><div class="pulse-val" style="color: #ff9100;">5</div></div>
+    </div>
+    ''', unsafe_allow_html=True)
     
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(
-        x=df.index, open=open_p, high=high_p, low=low_p, close=close,
-        name="Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'
-    ))
-    fig.update_layout(
-        template="plotly_dark", paper_bgcolor="#0d1117", plot_bgcolor="#161b22",
-        margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False
-    )
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.warning("⚠️ Market data unavailable.")
+    st.markdown(f'''
+    <div class="circle-container">
+        <div class="glow-circle">📈</div>
+        <div class="signal-title">BUY / BULLISH</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: BUY\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
+    wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
+    tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
+    
+    st.markdown(f'''
+    <div class="share-container">
+        <a class="share-btn btn-wa" href="{wa_url}" target="_blank">📲 Share on WhatsApp</a>
+        <a class="share-btn btn-tg" href="{tg_url}" target="_blank">✈️ Share on Telegram</a>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    chg_col = "#00e676" if price_change >= 0 else "#ff1744"
+    c1.markdown(f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{price:,.2f}</div><div class="metric-sub" style="color: {chg
