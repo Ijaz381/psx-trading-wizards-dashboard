@@ -10,6 +10,9 @@ from datetime import datetime
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = True
 
+if 'portfolio' not in st.session_state:
+    st.session_state.portfolio = []
+
 theme_bg = "#0d1117" if st.session_state.dark_mode else "#ffffff"
 theme_fg = "#ffffff" if st.session_state.dark_mode else "#000000"
 card_bg = "#161b22" if st.session_state.dark_mode else "#f0f2f6"
@@ -171,7 +174,7 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-st.markdown('<div class="news-banner"><div>🔥 <b>MARKET FLASH:</b> US CPI & Central Bank Rate Decisions active. High volatility expected across Gold, Oil & Forex Pairs! Managed by Ijaz Sardar (+92 300 7581169)</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="news-banner"><div>🔥 <b>LIVE NEWS FEED:</b> US CPI Data Released & Central Bank Rate Decisions Active. High Volatility Expected in Gold, Oil & Forex! Managed by Ijaz Sardar (+92 300 7581169)</div></div>', unsafe_allow_html=True)
 
 ticker_list = ["^KS100", "EURUSD=X", "GBPUSD=X", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA"]
 ticker_html_items = ""
@@ -346,7 +349,6 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
 
-    # 🔊 Reliable Web Speech Integration via components.html
     safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
@@ -419,6 +421,22 @@ if df is not None and not df.empty:
     m2.markdown(f'<div class="metric-card"><div class="metric-label">Stoch %K</div><div class="metric-val">{curr_stoch:.1f}</div></div>', unsafe_allow_html=True)
     m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
     m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
+
+    with st.expander("💼 Paper Trading & Virtual Portfolio Tracker", expanded=False):
+        st.markdown("Add current asset to your virtual mock portfolio to track live profit/loss:")
+        col_p1, col_p2 = st.columns(2)
+        v_shares = col_p1.number_input("Number of Units/Shares:", min_value=1.0, value=100.0, step=10.0)
+        if col_p2.button("➕ Add to Portfolio"):
+            st.session_state.portfolio.append({"Asset": sel_name, "Shares": v_shares, "BuyPrice": price})
+            st.success(f"Added {v_shares} shares of {sel_name} at {cur_sym}{price:,.4f} to portfolio!")
+        
+        if st.session_state.portfolio:
+            st.markdown("📌 **Your Active Mock Positions:**")
+            port_df = pd.DataFrame(st.session_state.portfolio)
+            st.dataframe(port_df, use_container_width=True)
+            if st.button("🗑️ Clear Portfolio"):
+                st.session_state.portfolio = []
+                st.rerun()
 
     with st.expander("🧮 Position Size & Trade Profit Calculator", expanded=False):
         st.markdown("Calculate your potential investment returns and required capital:")
