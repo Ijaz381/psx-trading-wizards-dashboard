@@ -10,6 +10,38 @@ from datetime import datetime
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
 st.markdown("""
+    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
+    components.html(f"""
+    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
+        <button id="speakBtn" style="
+            background: linear-gradient(135deg, #00e676, #00b0ff);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        ">
+            🔊 Listen Signal
+        </button>
+    </div>
+    <script>
+    document.getElementById("speakBtn").addEventListener("click", function() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var msg = new SpeechSynthesisUtterance("{signal_speech_text}");
+            msg.rate = 0.95;
+            window.speechSynthesis.speak(msg);
+        }}
+    }});
+    </script>
+    """, height=45)
+    
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&family=Orbitron:wght@600;700;900&display=swap');
 .stApp { background-color: #0d1117; color: #ffffff; }
