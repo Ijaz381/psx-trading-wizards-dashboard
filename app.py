@@ -7,10 +7,14 @@ import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
 
-st.sidebar.title("⚙️ Terminal Settings")
-theme_choice = st.sidebar.selectbox("Choose Theme:", ["Dark Mode 🌙", "Light Mode ☀️"], index=0)
+# Initialize Theme Session State
+if 'theme_mode' not in st.session_state:
+    st.session_state.theme_mode = "Dark Mode 🌙"
 
-is_dark = True if "Dark" in theme_choice else False
+st.sidebar.title("⚙️ Terminal Settings")
+st.session_state.theme_mode = st.sidebar.selectbox("Choose Theme:", ["Dark Mode 🌙", "Light Mode ☀️"], index=0 if "Dark" in st.session_state.theme_mode else 1)
+
+is_dark = True if "Dark" in st.session_state.theme_mode else False
 
 theme_bg = "#0d1117" if is_dark else "#ffffff"
 theme_fg = "#ffffff" if is_dark else "#000000"
