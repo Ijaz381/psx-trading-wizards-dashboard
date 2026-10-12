@@ -407,4 +407,32 @@ if df is not None and not df.empty:
         inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
         if price > 0:
             shares_qty = inv_capital / price
-            potential_profit
+            potential_profit = shares_qty * (target_price - price)
+            potential_loss = shares_qty * (price - stop_loss)
+            st.success(f"📊 **Suggested Units/Lots:** {shares_qty:,.2f}")
+            st.info(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
+            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
+
+    st.markdown("---")
+    st.markdown("🎛️ **Chart Indicator Controls:**")
+    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
+    show_ema20 = col_t1.checkbox("EMA 20", value=True)
+    show_ema50 = col_t2.checkbox("EMA 50", value=True)
+    show_upper_bb = col_t3.checkbox("Upper BB", value=True)
+    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
+
+    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
+    
+    if show_ema20:
+        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
+    if show_ema50:
+        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
+    if show_upper_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    if show_lower_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+        
+    fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    st.plotly_chart(fig, use_container_width=True)
