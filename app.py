@@ -350,7 +350,7 @@ symbols = {
     "S&P 500 (^GSPC)": "^GSPC",
     "Apple (AAPL)": "AAPL",
     "Tesla (TSLA)": "TSLA",
-    "NVIDIA (NVDA)": "NVIDIA",
+    "NVIDIA (NVDA)": "NVDA",
     "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
@@ -415,10 +415,10 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// Auto reload page every 60 seconds to keep live data fresh
+// Auto reload page every 30 seconds to keep live data fresh
 setTimeout(function(){
    window.location.reload(1);
-}, 60000);
+}, 30000);
 </script>
 """
 components.html(clock_component_code, height=0)
@@ -565,22 +565,25 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-# Optimized TTL (5 seconds) for faster live data updates
-@st.cache_data(ttl=5)
+# Optimized TTL (1 second) with Real-time yf.Ticker Endpoint
+@st.cache_data(ttl=1)
 def load_data(sym, p, i):
     df_test = None
     try:
-        df_test = yf.download(sym, period=p, interval=i, progress=False)
+        t_obj = yf.Ticker(sym)
+        df_test = t_obj.history(period="5d", interval="1m")
+        if df_test is None or df_test.empty:
+            df_test = yf.download(sym, period=p, interval=i, progress=False)
     except Exception:
         pass
         
-    if df_test is None or df_test.empty or len(df_test) < 3:
+    if df_test is None or df_test.empty or len(df_test) < 2:
         try:
-            df_test = yf.download("^KS100", period="6mo", interval="1d", progress=False)
+            df_test = yf.download(sym, period="10d", interval="1d", progress=False)
         except Exception:
             pass
             
-    if df_test is None or df_test.empty or len(df_test) < 3:
+    if df_test is None or df_test.empty or len(df_test) < 2:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         np.random.seed(42)
         prices = 1000 + np.cumsum(np.random.randn(50) * 15)
@@ -603,239 +606,3 @@ if df is not None and not df.empty:
     open_p = df['Open'] if 'Open' in df.columns else close
     high_p = df['High'] if 'High' in df.columns else close
     low_p = df['Low'] if 'Low' in df.columns else close
-    
-    if isinstance(close, pd.DataFrame): close = close.iloc[:, 0]
-    if isinstance(open_p, pd.DataFrame): open_p = open_p.iloc[:, 0]
-    if isinstance(high_p, pd.DataFrame): high_p = high_p.iloc[:, 0]
-    if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
-    
-    cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
-    
-    # RSI Calculation
-    delta = close.diff()
-    gain = delta.where(delta > 0, 0).rolling(14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
-    rsi = 100 - (100 / (1 + (gain / loss)))
-    curr_rsi = float(rsi.iloc[-1]) if not rsi.empty and not pd.isna(rsi.iloc[-1]) else 50.0
-    
-    # EMA Calculation
-    ema = close.ewm(span=min(50, len(close)), adjust=False).mean()
-    
-    # MACD Calculation
-    exp1 = close.ewm(span=12, adjust=False).mean()
-    exp2 = close.ewm(span=26, adjust=False).mean()
-    macd = exp1 - exp2
-    sig_line = macd.ewm(span=9, adjust=False).mean()
-    
-    # Bollinger Bands Calculation
-    bb_period = min(20, len(close))
-    bb_sma = close.rolling(bb_period).mean()
-    bb_std = close.rolling(bb_period).std()
-    bb_upper = bb_sma + (bb_std * 2)
-    bb_lower = bb_sma - (bb_std * 2)
-    
-    price = float(close.iloc[-1])
-    prev_price = float(close.iloc[-2]) if len(close) > 1 else price
-    price_change = price - prev_price
-    pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
-    
-    m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
-    s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
-    
-    b_upper = float(bb_upper.iloc[-1]) if not bb_upper.empty and not pd.isna(bb_upper.iloc[-1]) else price * 1.05
-    b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
-    b_mid = float(bb_sma.iloc[-1]) if not bb_sma.empty and not pd.isna(bb_sma.iloc[-1]) else price
-    
-    # Target / Stop Loss Auto-Calculations
-    atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
-    if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
-    
-    green_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-green candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
-    red_candles_html = """<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>"""
-    neutral_candles_html = """<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>"""
-    
-    if curr_rsi < 42 and price <= b_lower * 1.01:
-        sig = "STRONG BUY"
-        col = "#00e676"
-        candle_icon_html = green_candles_html
-        glow_rgba = "rgba(0, 230, 118, 0.85)"
-        stop_loss = price - (1.5 * atr_val)
-        target_price = price + (2.5 * atr_val)
-    elif curr_rsi < 48 and m_val > s_val:
-        sig = "BUY"
-        col = "#00e676"
-        candle_icon_html = green_candles_html
-        glow_rgba = "rgba(0, 230, 118, 0.85)"
-        stop_loss = price - (1.2 * atr_val)
-        target_price = price + (2.0 * atr_val)
-    elif curr_rsi > 65 and price >= b_upper * 0.99:
-        sig = "STRONG SELL"
-        col = "#ff1744"
-        candle_icon_html = red_candles_html
-        glow_rgba = "rgba(255, 23, 68, 0.85)"
-        stop_loss = price + (1.5 * atr_val)
-        target_price = price - (2.5 * atr_val)
-    elif curr_rsi > 60 and m_val < s_val:
-        sig = "SELL (SHORT)"
-        col = "#ff1744"
-        candle_icon_html = red_candles_html
-        glow_rgba = "rgba(255, 23, 68, 0.85)"
-        stop_loss = price + (1.2 * atr_val)
-        target_price = price - (2.0 * atr_val)
-    else:
-        sig = "HOLD / NEUTRAL"
-        col = "#ff9100"
-        candle_icon_html = neutral_candles_html
-        glow_rgba = "rgba(255, 145, 0, 0.8)"
-        stop_loss = price - (1.0 * atr_val)
-        target_price = price + (1.0 * atr_val)
-        
-    # Market Pulse Counters
-    b_count = 24 if "BUY" in sig else 18
-    s_count = 12 if "SELL" in sig else 14
-    h_count = 5
-    
-    st.markdown(f'''
-    <div class="pulse-container">
-        <div class="pulse-item">
-            <div class="pulse-label" style="color: #00e676;">🟢 Bullish</div>
-            <div class="pulse-val" style="color: #00e676;">{b_count}</div>
-        </div>
-        <div class="pulse-item" style="border-left: 1px solid #30363d; border-right: 1px solid #30363d;">
-            <div class="pulse-label" style="color: #ff1744;">🔴 Bearish</div>
-            <div class="pulse-val" style="color: #ff1744;">{s_count}</div>
-        </div>
-        <div class="pulse-item">
-            <div class="pulse-label" style="color: #ff9100;">🟠 Neutral</div>
-            <div class="pulse-val" style="color: #ff9100;">{h_count}</div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    st.markdown(f'''
-    <div class="circle-container">
-        <div class="glow-circle-wrapper">
-            <div class="glow-circle-ring" style="--signal-color: {col};"></div>
-            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow_rgba};">
-                {candle_icon_html}
-            </div>
-        </div>
-        <div class="signal-title" style="color: {col};">{sig}</div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
-    
-    components.html(f"""
-    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif;">
-        <button id="speakBtn" style="
-            background: linear-gradient(135deg, #00e676, #00b0ff);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 13px;
-            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        ">
-            🔊 Listen Signal
-        </button>
-    </div>
-
-    <script>
-    document.getElementById("speakBtn").addEventListener("click", function() {{
-        if ('speechSynthesis' in window) {{
-            window.speechSynthesis.cancel();
-            var msg = new SpeechSynthesisUtterance("{signal_speech_text}");
-            msg.rate = 0.95;
-            msg.pitch = 1.0;
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        }} else {{
-            alert("Speech Synthesis is not supported in this browser.");
-        }}
-    }});
-    </script>
-    """, height=45)
-
-    share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
-    wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
-    tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
-    
-    st.markdown(f'''
-    <div class="share-container">
-        <a class="share-btn btn-wa" href="{wa_url}" target="_blank">📲 Share on WhatsApp</a>
-        <a class="share-btn btn-tg" href="{tg_url}" target="_blank">✈️ Share on Telegram</a>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    c1, c2, c3 = st.columns(3)
-    
-    p_str = f"{price:,.2f}"
-    chg_col = "#00e676" if price_change >= 0 else "#ff1744"
-    chg_str = f"{'+' if price_change>=0 else ''}{price_change:,.2f} ({'+' if pct_change>=0 else ''}{pct_change:.2f}%)"
-    
-    card1 = f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{p_str}</div><div class="metric-sub" style="color: {chg_col};">{chg_str}</div></div>'
-    card2 = f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>'
-    card3 = f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>'
-    
-    c1.markdown(card1, unsafe_allow_html=True)
-    c2.markdown(card2, unsafe_allow_html=True)
-    c3.markdown(card3, unsafe_allow_html=True)
-    
-    k1, k2, k3 = st.columns(3)
-    r_str = f"{curr_rsi:.2f}"
-    t_col = "#00e676" if m_val > s_val else "#ff1744"
-    t_txt = "Bullish" if m_val > s_val else "Bearish"
-    
-    card_k1 = f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{r_str}</div></div>'
-    card_k2 = f'<div class="metric-card"><div class="metric-label">MACD Trend</div><div class="metric-val" style="color: {t_col};">{t_txt}</div></div>'
-    card_k3 = f'<div class="metric-card"><div class="metric-label">EMA 50</div><div class="metric-val">{cur_sym}{float(ema.iloc[-1]):,.2f}</div></div>'
-    
-    k1.markdown(card_k1, unsafe_allow_html=True)
-    k2.markdown(card_k2, unsafe_allow_html=True)
-    k3.markdown(card_k3, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
-    
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(
-        x=df.index,
-        open=open_p,
-        high=high_p,
-        low=low_p,
-        close=close,
-        name="Price Candlestick",
-        increasing_line_color='#00e676',
-        decreasing_line_color='#ff1744'
-    ))
-    
-    fig.add_trace(go.Scatter(x=df.index, y=ema, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
-    fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="#0d1117",
-        plot_bgcolor="#161b22",
-        margin=dict(l=10, r=10, t=30, b=10),
-        xaxis_rangeslider_visible=False,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("📊 Technical Summary")
-    st.write(f"- **EMA 50:** {float(ema.iloc[-1]):,.2f}")
-    st.write(f"- **MACD Line:** {m_val:.2f} | **Signal Line:** {s_val:.2f}")
-    st.write(f"- **Bollinger Bands Upper:** {b_upper:,.2f} | **Lower:** {b_lower:,.2f}")
-
-else:
-    st.warning("⚠️ Market data temporarily unavailable. Please select another share or timeframe.")
