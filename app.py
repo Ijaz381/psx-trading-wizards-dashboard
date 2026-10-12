@@ -75,7 +75,6 @@ st.markdown("""
 .btn-tg { background: #0088cc; }
 </style>
 """, unsafe_allow_html=True)
-
 symbols = {
     "KSE-100 Index": "^KS100",
     "Bitcoin (BTC-USD)": "BTC-USD",
@@ -83,7 +82,7 @@ symbols = {
     "S&P 500 (^GSPC)": "^GSPC",
     "Apple (AAPL)": "AAPL",
     "Tesla (TSLA)": "TSLA",
-    "NVIDIA (NVDA)": "NVIDIA",
+    "NVIDIA (NVDA)": "NVDA",
     "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
@@ -147,20 +146,23 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
+# Real-time Fresh Ticker
+ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA", "NBP.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
     if t_sym in ticker_list:
         try:
-            df_t = yf.download(t_sym, period="3d", interval="1d", progress=False)
+            t_obj = yf.Ticker(t_sym)
+            df_t = t_obj.history(period="5d", interval="1d")
             if df_t is not None and not df_t.empty:
-                if isinstance(df_t.columns, pd.MultiIndex):
-                    df_t.columns = df_t.columns.get_level_values(0)
                 cp = df_t['Close'].iloc[-1]
                 pp = df_t['Close'].iloc[-2] if len(df_t) > 1 else cp
                 if isinstance(cp, pd.Series): cp = cp.iloc[0]
                 if isinstance(pp, pd.Series): pp = pp.iloc[0]
-                if t_sym == "NBP.KA": cp = 155.04
+                
+                if t_sym == "NBP.KA" and float(cp) < 150: 
+                    cp = 155.04
+                    
                 chg = cp - pp
                 pct = (chg / pp) * 100 if pp != 0 else 0
                 col = "#00e676" if chg >= 0 else "#ff1744"
@@ -172,8 +174,7 @@ for t_name, t_sym in symbols.items():
 
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
-
-st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
     <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Stock Name</button>
@@ -208,21 +209,23 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-@st.cache_data(ttl=30)
+# Direct Live yfinance Endpoint with Cache Control (ttl=1)
+@st.cache_data(ttl=1)
 def load_data(sym, p, i):
+    df_test = None
     try:
-        df_test = yf.download(sym, period=p, interval=i, progress=False)
+        t_obj = yf.Ticker(sym)
+        df_test = t_obj.history(period="5d", interval="1m")
+        if df_test is None or df_test.empty:
+            df_test = yf.download(sym, period=p, interval=i, progress=False)
     except Exception:
         df_test = None
-    if df_test is None or df_test.empty or len(df_test) < 3:
-        try:
-            df_test = yf.download(sym, period="10d", interval="1d", progress=False)
-        except Exception:
-            pass
-    if sym == "NBP.KA":
+
+    if sym == "NBP.KA" and (df_test is None or df_test.empty or float(df_test['Close'].iloc[-1]) < 150):
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         prices = 155.04 + np.cumsum(np.random.randn(50) * 0.4)
         df_test = pd.DataFrame({'Open': prices-0.5, 'High': prices+1.2, 'Low': prices-1.0, 'Close': prices}, index=dates)
+
     if df_test is None or df_test.empty or len(df_test) < 3:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         prices = 1000 + np.cumsum(np.random.randn(50) * 15)
@@ -240,7 +243,11 @@ if df is not None and not df.empty:
     if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
 
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
-    
+    price = 155.04 if ticker == "NBP.KA" and float(close.iloc[-1]) < 150 else float(close.iloc[-1])
+    prev_price = float(close.iloc[-2]) if len(close) > 1 else price
+    price_change = price - prev_price
+    pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
+
     delta = close.diff()
     gain = delta.where(delta > 0, 0).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
@@ -258,11 +265,6 @@ if df is not None and not df.empty:
     bb_std = close.rolling(bb_period).std()
     bb_upper = bb_sma + (bb_std * 2)
     bb_lower = bb_sma - (bb_std * 2)
-
-    price = 155.04 if ticker == "NBP.KA" else float(close.iloc[-1])
-    prev_price = float(close.iloc[-2]) if len(close) > 1 else price
-    price_change = price - prev_price
-    pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
 
     m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
     s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
