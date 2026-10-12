@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
 
-# Theme state management
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = True
 
@@ -18,17 +17,17 @@ border_col = "#30363d" if st.session_state.dark_mode else "#d1d5db"
 
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
-st.markdown(f"""
+css_code = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&family=Orbitron:wght@600;700;900&display=swap');
-.stApp {{ background-color: {theme_bg}; color: {theme_fg}; }}
+.stApp {{ background-color: """ + theme_bg + """; color: """ + theme_fg + """; }}
 #MainMenu, footer, header {{visibility: hidden !important; display: none !important;}}
 
 .ticker-wrap {{
-    width: 100%; overflow: hidden; background: {card_bg};
-    border-bottom: 1px solid {border_col}; border-top: 1px solid {border_col};
+    width: 100%; overflow: hidden; background: """ + card_bg + """;
+    border-bottom: 1px solid """ + border_col + """; border-top: 1px solid """ + border_col + """;
     padding: 8px 0; white-space: nowrap; box-sizing: border-box; margin: 10px 0 15px 0;
-}
+}}
 .ticker {{ display: inline-block; white-space: nowrap; animation: ticker 35s linear infinite; }}
 .ticker-item {{ display: inline-block; padding: 0 25px; font-size: 13px; font-weight: 700; font-family: 'Poppins', sans-serif; }}
 @keyframes ticker {{ 0% {{ transform: translate3d(0, 0, 0); }} 100% {{ transform: translate3d(-50%, 0, 0); }} }}
@@ -45,10 +44,10 @@ st.markdown(f"""
 .animated-author {{ font-family: 'Great Vibes', cursive; font-size: 30px; color: #58a6ff; margin-top: -2px; }}
 
 .header-info-strip {{ display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }}
-.header-badge {{ background: {card_bg}; border: 1px solid {border_col}; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }}
-.header-phone {{ background: {card_bg}; border: 1px solid {border_col}; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }}
+.header-badge {{ background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }}
+.header-phone {{ background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }}
 
-.pulse-container {{ display: flex; justify-content: space-around; align-items: center; background: {card_bg}; border: 1px solid {border_col}; border-radius: 12px; padding: 10px 5px; margin: 10px 0; }}
+.pulse-container {{ display: flex; justify-content: space-around; align-items: center; background: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 5px; margin: 10px 0; }}
 .pulse-item {{ text-align: center; flex: 1; }}
 .pulse-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase; }}
 .pulse-val {{ font-size: 18px; font-weight: 900; margin-top: 2px; }}
@@ -60,7 +59,7 @@ st.markdown(f"""
 
 .glow-circle {{ 
     width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-    background: radial-gradient(circle, {card_bg} 0%, {theme_bg} 100%); 
+    background: radial-gradient(circle, """ + card_bg + """ 0%, """ + theme_bg + """ 100%); 
     box-shadow: 0 0 30px var(--glow-color, rgba(255, 145, 0, 0.5)); border: 3px solid var(--signal-color, #ff9100);
     animation: pulseGlow 1.8s ease-in-out infinite alternate; z-index: 2;
 }}
@@ -78,9 +77,9 @@ st.markdown(f"""
 
 .signal-title {{ font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 5px; }}
 
-.metric-card {{ background-color: {card_bg}; border: 1px solid {border_col}; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; }}
+.metric-card {{ background-color: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; }}
 .metric-label {{ color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }}
-.metric-val {{ color: {theme_fg} !important; font-size: 16px !important; font-weight: 800 !important; }}
+.metric-val {{ color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }}
 .metric-sub {{ font-size: 11px; font-weight: 700; margin-top: 3px; }}
 
 .share-container {{ display: flex; gap: 10px; justify-content: center; margin: 12px 0; }}
@@ -88,7 +87,8 @@ st.markdown(f"""
 .btn-wa {{ background: #25D366; }}
 .btn-tg {{ background: #0088cc; }}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_code, unsafe_allow_html=True)
 
 symbols = {
     "KSE-100 Index": "^KS100",
@@ -117,7 +117,6 @@ symbols = {
     "KEL (K-Electric Limited)": "KEL.KA"
 }
 
-# Sidebar for Theme & Custom Watchlist Manager
 st.sidebar.title("⚙️ Terminal Settings")
 if st.sidebar.button("🌓 Toggle Dark/Light Mode"):
     st.session_state.dark_mode = not st.session_state.dark_mode
@@ -172,7 +171,6 @@ setInterval(updateClock, 1000);
 
 st.markdown('<div class="news-banner">🚨 <b>Economic News Feed:</b> US CPI & Central Bank Rate Decisions active. High volatility expected in Gold, Oil & Forex Pairs! Managed by Ijaz Sardar (+92 300 7581169)</div>', unsafe_allow_html=True)
 
-# Ticker items
 ticker_list = ["^KS100", "EURUSD=X", "GBPUSD=X", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -387,7 +385,6 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🌐 Multi-Timeframe Signal Matrix Table
     st.markdown("---")
     st.markdown("🌐 **Multi-Timeframe Trend Matrix:**")
     mtf_data = [
@@ -422,7 +419,7 @@ if df is not None and not df.empty:
     show_ema20 = col_t1.checkbox("EMA 20", value=True)
     show_ema50 = col_t2.checkbox("EMA 50", value=True)
     show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
+    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
 
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
@@ -435,7 +432,7 @@ if df is not None and not df.empty:
     if show_upper_bb:
         fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
     if show_lower_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
         
     fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
