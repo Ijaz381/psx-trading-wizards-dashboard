@@ -65,16 +65,11 @@ css_code = """
 .header-badge { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }
 .header-phone { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }
 
-.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }
-.glow-circle-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }
-.glow-circle-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px dashed var(--signal-color, #ff9100); animation: rotateRing 8s linear infinite; }
-@keyframes rotateRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
 .glow-circle { 
     width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
     background: radial-gradient(circle, """ + card_bg + """ 0%, """ + theme_bg + """ 100%); 
     box-shadow: 0 0 30px var(--glow-color, rgba(255, 145, 0, 0.5)); border: 3px solid var(--signal-color, #ff9100);
-    animation: pulseGlow 1.8s ease-in-out infinite alternate; z-index: 2;
+    animation: pulseGlow 1.8s ease-in-out infinite alternate; z-index: 2; margin: 0 auto;
 }
 @keyframes pulseGlow { 0% { transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); } 100% { transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); } }
 
@@ -213,6 +208,7 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
+# 📝 Manual Price Input Feature Restored
 st.markdown("---")
 manual_label = "✍️ Enter Custom / Manual Price for Analysis" if not is_urdu else "✍️ تجزیے کے لیے اپنی مرضی کی قیمت درج کریں"
 use_manual_price = st.checkbox(manual_label, value=False)
@@ -360,7 +356,8 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
-    safe_signal_text = f"Trading signal is {sig}. Current price is {cur_sym}{price:,.4f}"
+    # 🔊 Audio Signal with Stock Name included
+    safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
         <button onclick="playSignal()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 24px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);">🔊 {"Listen Signal Audio" if not is_urdu else "سگنل آڈیو سنیں"}</button>
@@ -384,7 +381,7 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # AI Assistant Section
+    # 🤖 AI Assistant Section
     st.markdown("---")
     ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
     st.markdown(f"**{ai_heading}**")
@@ -394,7 +391,7 @@ if df is not None and not df.empty:
     
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
-        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION</p>
+        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION for {sel_name}</p>
         <p style="font-size: 17px; font-weight: 900; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -417,6 +414,31 @@ if df is not None and not df.empty:
     </script>
     """
     components.html(ai_btn_html, height=60)
+
+    # 🧮 Risk-to-Reward and Position Size Calculator Restored
+    with st.expander("⚖️ Risk-to-Reward & Profit Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ اور پرافٹ کیلکولیٹر", expanded=False):
+        st.markdown("Calculate your exact trade risk and potential returns:")
+        inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
+        r_entry = st.number_input("Entry Price:", value=price, step=0.5)
+        r_sl = st.number_input("Custom Stop Loss:", value=stop_loss, step=0.5)
+        r_tp = st.number_input("Custom Take Profit:", value=target_price, step=0.5)
+        if r_entry > 0 and r_sl > 0 and r_tp > 0:
+            risk = abs(r_entry - r_sl)
+            reward = abs(r_tp - r_entry)
+            ratio = reward / risk if risk != 0 else 0
+            shares_qty = inv_capital / r_entry
+            potential_profit = shares_qty * (r_tp - r_entry)
+            potential_loss = shares_qty * (r_entry - r_sl)
+            st.info(f"📊 **Risk-to-Reward Ratio:** 1 : {ratio:.2f}")
+            st.success(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
+            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
+
+    st.markdown("---")
+    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آటో سپورٹ اور ریزسٹنس لیولز:**")
+    sr1, sr2, sr3 = st.columns(3)
+    sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
+    sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
+    sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
 
     # Advanced Technical Metrics Section
     st.markdown("---")
