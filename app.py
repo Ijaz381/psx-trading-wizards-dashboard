@@ -350,7 +350,7 @@ symbols = {
     "S&P 500 (^GSPC)": "^GSPC",
     "Apple (AAPL)": "AAPL",
     "Tesla (TSLA)": "TSLA",
-    "NVIDIA (NVDA)": "NVDA",
+    "NVIDIA (NVDA)": "NVIDIA",
     "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
@@ -401,7 +401,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Live Pakistan Digital Clock JavaScript Component
+# Live Pakistan Digital Clock & Auto-Refresh JavaScript Component
 clock_component_code = """
 <script>
 function updateClock() {
@@ -414,6 +414,11 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+// Auto reload page every 60 seconds to keep live data fresh
+setTimeout(function(){
+   window.location.reload(1);
+}, 60000);
 </script>
 """
 components.html(clock_component_code, height=0)
@@ -560,7 +565,8 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-@st.cache_data(ttl=30)
+# Optimized TTL (5 seconds) for faster live data updates
+@st.cache_data(ttl=5)
 def load_data(sym, p, i):
     df_test = None
     try:
