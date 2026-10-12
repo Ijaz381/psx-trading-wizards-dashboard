@@ -207,14 +207,7 @@ for t_name, t_sym in symbols.items():
 if ticker_html_items:
     st.markdown('<div class="ticker-wrap"><div class="ticker">' + ticker_html_items + ticker_html_items + '</div></div>', unsafe_allow_html=True)
 
-# 🌐 Market Sessions Status Clock Widget
-st.markdown("🌐 **Live Market Sessions Status:**")
-s_col1, s_col2, s_col3 = st.columns(3)
-s_col1.markdown(f'<div class="metric-card"><div class="metric-label">🇵🇰 PSX Market</div><div class="metric-val" style="color: #00e676;">OPEN / ACTIVE</div></div>', unsafe_allow_html=True)
-s_col2.markdown(f'<div class="metric-card"><div class="metric-label">💱 Forex 24/5</div><div class="metric-val" style="color: #00e676;">LIVE SESSION</div></div>', unsafe_allow_html=True)
-s_col3.markdown(f'<div class="metric-card"><div class="metric-label">🇺🇸 US Wall Street</div><div class="metric-val" style="color: #ff9100;">PRE-MARKET</div></div>', unsafe_allow_html=True)
-
-st.markdown("<h6 style='text-align: center; color: #00e676; margin-top: 10px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
     <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Stock/Forex Name</button>
@@ -312,6 +305,42 @@ if df is not None and not df.empty:
     macd = exp1 - exp2
     sig_line = macd.ewm(span=9, adjust=False).mean()
 
+    # Parabolic SAR Calculation (Special Indicator)
+    sar = close.copy()
+    sar_val = low_p.min() if not low_p.empty else close.min()
+    psar = [sar_val] * len(close)
+    bull = True
+    af = 0.02
+    hp = high_p.max() if not high_p.empty else close.max()
+    lp = low_p.min() if not low_p.empty else close.min()
+
+    for i in range(2, len(close)):
+        if bull:
+            sar_val = sar_val + af * (hp - sar_val)
+            if low_p.iloc[i] < sar_val:
+                bull = False
+                sar_val = hp
+                hp = high_p.iloc[i]
+                af = 0.02
+            else:
+                if high_p.iloc[i] > hp:
+                    hp = high_p.iloc[i]
+                    af = min(af + 0.02, 0.2)
+        else:
+            sar_val = sar_val + af * (lp - sar_val)
+            if high_p.iloc[i] > sar_val:
+                bull = True
+                sar_val = lp
+                lp = low_p.iloc[i]
+                af = 0.02
+            else:
+                if low_p.iloc[i] < lp:
+                    lp = low_p.iloc[i]
+                    af = min(af + 0.02, 0.2)
+        psar.append(sar_val)
+
+    curr_sar = psar[-1]
+
     bb_period = min(20, len(close))
     bb_sma = close.rolling(bb_period).mean()
     bb_std = close.rolling(bb_period).std()
@@ -343,13 +372,13 @@ if df is not None and not df.empty:
     red_c = '<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>'
     neut_c = '<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>'
 
-    if curr_rsi < 40 and curr_stoch < 20 and m_val > s_val:
+    if curr_rsi < 40 and price > curr_sar and m_val > s_val:
         sig, col, icon, glow = "STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)"
         stop_loss, target_price = price - (1.5 * atr_val), price + (2.5 * atr_val)
-    elif curr_rsi < 48 and m_val > s_val:
+    elif curr_rsi < 48 and price > curr_sar:
         sig, col, icon, glow = "BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)"
         stop_loss, target_price = price - (1.2 * atr_val), price + (2.0 * atr_val)
-    elif curr_rsi > 60 and curr_stoch > 80 and m_val < s_val:
+    elif curr_rsi > 60 and price < curr_sar and m_val < s_val:
         sig, col, icon, glow = "STRONG SELL", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)"
         stop_loss, target_price = price + (1.5 * atr_val), price - (2.5 * atr_val)
     else:
@@ -430,8 +459,8 @@ if df is not None and not df.empty:
     col_ai1, col_ai2 = st.columns(2)
     with col_ai1:
         if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
-            ai_direction = "UP 🟢 (Bullish Momentum)" if curr_rsi < 50 and m_val > s_val else ("DOWN 🔴 (Bearish Momentum)" if curr_rsi > 55 or m_val < s_val else "SIDEWAYS 🟠 (Consolidation)")
-            ai_reason = f"Based on price {cur_sym}{price:,.4f}, RSI ({curr_rsi:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name}."
+            ai_direction = "UP 🟢 (Bullish Momentum)" if price > curr_sar and curr_rsi < 55 else "DOWN 🔴 (Bearish Momentum)"
+            ai_reason = f"Parabolic SAR value is {curr_sar:.2f}. Based on trend reversal and momentum, the market points {ai_direction.split(' ')[0]}."
             
             st.markdown(f"""
             <div class="ai-box">
@@ -442,12 +471,12 @@ if df is not None and not df.empty:
             """, unsafe_allow_html=True)
             
     with col_ai2:
-        sentiment_text = "Greed 🟢 (Bullish)" if curr_rsi > 50 else "Fear 🔴 (Bearish)"
+        sentiment_text = "Greed 🟢 (Bullish)" if price > curr_sar else "Fear 🔴 (Bearish)"
         st.markdown(f"""
         <div class="ai-box">
             <h4 style="color: #ff9100; margin-top: 0;">📊 Market Sentiment (Fear & Greed):</h4>
             <p style="font-size: 15px; font-weight: bold; color: #00e676;">Index Status: {sentiment_text}</p>
-            <p style="font-size: 12px; color: #c9d1d9;">Calculated from custom and live technical indicators.</p>
+            <p style="font-size: 12px; color: #c9d1d9;">Evaluated via Parabolic SAR & Momentum.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -473,7 +502,7 @@ if df is not None and not df.empty:
     st.markdown("---")
     st.markdown("🌐 **Multi-Timeframe Trend Matrix:**")
     mtf_data = [
-        {"Timeframe": "15 Minutes", "Trend": "Bullish" if curr_rsi > 45 else "Bearish", "RSI": f"{curr_rsi:.1f}"},
+        {"Timeframe": "15 Minutes", "Trend": "Bullish" if price > curr_sar else "Bearish", "RSI": f"{curr_rsi:.1f}"},
         {"Timeframe": "1 Hour", "Trend": "Bullish" if m_val > s_val else "Bearish", "RSI": f"{(curr_rsi + 2):.1f}"},
         {"Timeframe": "Daily (1D)", "Trend": sig, "RSI": f"{(curr_rsi - 1):.1f}"}
     ]
@@ -483,10 +512,10 @@ if df is not None and not df.empty:
     st.download_button(label="📥 Download Chart Data as CSV", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
 
     st.markdown("---")
-    st.markdown("📊 **Advanced Technical Metrics:**")
+    st.markdown("📊 **Advanced Technical Metrics (with Parabolic SAR):**")
     m1, m2, m3, m4 = st.columns(4)
-    m1.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="metric-card"><div class="metric-label">Stoch %K</div><div class="metric-val">{curr_stoch:.1f}</div></div>', unsafe_allow_html=True)
+    m1.markdown(f'<div class="metric-card"><div class="metric-label">Parabolic SAR</div><div class="metric-val">{cur_sym}{curr_sar:,.2f}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
     m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
     m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
 
@@ -510,7 +539,6 @@ if df is not None and not df.empty:
                 st.session_state.portfolio = []
                 st.rerun()
 
-    # ⭐ User Feedback & Rating Form
     with st.expander("⭐ User Feedback & Rating Box", expanded=False):
         st.markdown("Rate your experience with PSX Trading Wizards:")
         user_rating = st.slider("Select Stars:", 1, 5, 5)
@@ -524,7 +552,7 @@ if df is not None and not df.empty:
     show_ema20 = col_t1.checkbox("EMA 20", value=True)
     show_ema50 = col_t2.checkbox("EMA 50", value=True)
     show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
+    show_sar = col_t4.checkbox("Parabolic SAR", value=True)
 
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
@@ -536,8 +564,8 @@ if df is not None and not df.empty:
         fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
     if show_upper_bb:
         fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    if show_lower_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    if show_sar:
+        fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='Parabolic SAR', marker=dict(color='#00b0ff', size=5)))
         
     fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
