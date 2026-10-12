@@ -244,7 +244,6 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
-# 📝 Manual Price Input Feature
 st.markdown("---")
 use_manual_price = st.checkbox("✍️ Enter Custom / Manual Price for Analysis", value=False)
 manual_price_val = 0.0
@@ -305,8 +304,7 @@ if df is not None and not df.empty:
     macd = exp1 - exp2
     sig_line = macd.ewm(span=9, adjust=False).mean()
 
-    # Parabolic SAR Calculation (Special Indicator)
-    sar = close.copy()
+    # Parabolic SAR Calculation
     sar_val = low_p.min() if not low_p.empty else close.min()
     psar = [sar_val] * len(close)
     bull = True
@@ -452,33 +450,45 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 AI Trading Assistant & Sentiment Meter Section
+    # 🤖 Speaking AI Assistant Section
     st.markdown("---")
-    st.markdown("🤖 **AI Trading Assistant & Market Sentiment:**")
+    st.markdown("🤖 **Speaking AI Assistant (Bullish / Bearish Voice Predictor):**")
     
-    col_ai1, col_ai2 = st.columns(2)
-    with col_ai1:
-        if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
-            ai_direction = "UP 🟢 (Bullish Momentum)" if price > curr_sar and curr_rsi < 55 else "DOWN 🔴 (Bearish Momentum)"
-            ai_reason = f"Parabolic SAR value is {curr_sar:.2f}. Based on trend reversal and momentum, the market points {ai_direction.split(' ')[0]}."
-            
-            st.markdown(f"""
-            <div class="ai-box">
-                <h4 style="color: #00e676; margin-top: 0;">🤖 Wizard AI Bot Analysis:</h4>
-                <p style="font-size: 15px; font-weight: bold; color: #58a6ff;">Prediction: {ai_direction}</p>
-                <p style="font-size: 12px; color: #c9d1d9;">{ai_reason}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-    with col_ai2:
-        sentiment_text = "Greed 🟢 (Bullish)" if price > curr_sar else "Fear 🔴 (Bearish)"
-        st.markdown(f"""
-        <div class="ai-box">
-            <h4 style="color: #ff9100; margin-top: 0;">📊 Market Sentiment (Fear & Greed):</h4>
-            <p style="font-size: 15px; font-weight: bold; color: #00e676;">Index Status: {sentiment_text}</p>
-            <p style="font-size: 12px; color: #c9d1d9;">Evaluated via Parabolic SAR & Momentum.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    ai_direction = "BULLISH 🟢 (Upward Candle Momentum)" if price > curr_sar and curr_rsi < 55 else "BEARISH 🔴 (Downward Candle Momentum)"
+    ai_speak_text = f"The AI Assistant predicts that the candle for {sel_name} is heading {ai_direction}."
+    
+    ai_voice_html = f"""
+    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 10px 0; text-align: center;">
+        <h4 style="color: #00e676; margin-top: 0; margin-bottom: 8px;">🤖 Speaking AI Assistant Prediction:</h4>
+        <p style="font-size: 16px; font-weight: bold; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
+        <button onclick="speakAI()" style="
+            background: linear-gradient(135deg, #ff9100, #ff3d00);
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(255, 145, 0, 0.5);
+        ">
+            🗣️ Listen AI Voice (Bullish or Bearish?)
+        </button>
+    </div>
+    <script>
+    function speakAI() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance("{ai_speak_text}");
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }} else {{
+            alert('Speech synthesis not supported in this browser.');
+        }}
+    }}
+    </script>
+    """
+    components.html(ai_voice_html, height=130)
 
     # ⚖️ Risk-to-Reward Ratio Calculator
     with st.expander("⚖️ Risk-to-Reward Ratio Calculator", expanded=False):
