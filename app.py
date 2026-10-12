@@ -7,8 +7,15 @@ import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
 
-if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = True
+st.sidebar.title("⚙️ Terminal Settings")
+theme_choice = st.sidebar.selectbox("Choose Theme:", ["Dark Mode 🌙", "Light Mode ☀️"], index=0)
+
+is_dark = True if "Dark" in theme_choice else False
+
+theme_bg = "#0d1117" if is_dark else "#ffffff"
+theme_fg = "#ffffff" if is_dark else "#000000"
+card_bg = "#161b22" if is_dark else "#f0f2f6"
+border_col = "#30363d" if is_dark else "#d1d5db"
 
 if 'portfolio' not in st.session_state:
     st.session_state.portfolio = []
@@ -19,11 +26,6 @@ if 'signal_history' not in st.session_state:
         {"Asset": "Crude Oil (CL=F)", "Signal": "BUY", "Date": "2026-10-11", "Status": "Running 📊"},
         {"Asset": "HBL (Habib Bank Limited)", "Signal": "STRONG SELL", "Date": "2026-10-09", "Status": "Stop Loss Hit 🛑"}
     ]
-
-theme_bg = "#0d1117" if st.session_state.dark_mode else "#ffffff"
-theme_fg = "#ffffff" if st.session_state.dark_mode else "#000000"
-card_bg = "#161b22" if st.session_state.dark_mode else "#f0f2f6"
-border_col = "#30363d" if st.session_state.dark_mode else "#d1d5db"
 
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
@@ -92,7 +94,7 @@ css_code = """
 .metric-val { color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }
 .metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
 
-.ai-box { background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); }
+.ai-box { background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); color: #ffffff; }
 
 .share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
 .share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }
@@ -130,11 +132,6 @@ symbols = {
     "BOP (Bank of Punjab)": "BOP.KA",
     "KEL (K-Electric Limited)": "KEL.KA"
 }
-
-st.sidebar.title("⚙️ Terminal Settings")
-if st.sidebar.button("🌓 Toggle Dark / Light Theme"):
-    st.session_state.dark_mode = not st.session_state.dark_mode
-    st.rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("⭐ **Custom Watchlist Manager**")
@@ -184,7 +181,6 @@ setInterval(updateClock, 1000);
 """, height=0)
 
 st.markdown('<div class="news-banner"><div>🔥 <b>LIVE NEWS FEED:</b> US CPI Data Released & Central Bank Rate Decisions Active. High Volatility Expected in Gold, Oil & Forex! Managed by Ijaz Sardar (+92 300 7581169)</div></div>', unsafe_allow_html=True)
-
 ticker_list = ["^KS100", "EURUSD=X", "GBPUSD=X", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -407,7 +403,6 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 AI Trading Assistant / Bot Section
     st.markdown("---")
     st.markdown("🤖 **AI Trading Assistant (Ask AI Bot):**")
     st.markdown("Ask the AI bot whether the candlestick is heading UP or DOWN based on live indicators:")
@@ -501,5 +496,5 @@ if df is not None and not df.empty:
     if show_lower_bb:
         fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
         
-    fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
