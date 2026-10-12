@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
 
-# Initialize Theme Session State
 if 'theme_mode' not in st.session_state:
     st.session_state.theme_mode = "Dark Mode 🌙"
 
@@ -245,6 +244,13 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
+# 📝 Manual Price Input Feature
+st.markdown("---")
+use_manual_price = st.checkbox("✍️ Enter Custom / Manual Price for Analysis", value=False)
+manual_price_val = 0.0
+if use_manual_price:
+    manual_price_val = st.number_input("Enter Share/Asset Price Manually:", min_value=0.001, value=150.0, step=0.5)
+
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=1)
@@ -280,6 +286,10 @@ if df is not None and not df.empty:
     if isinstance(high_p, pd.DataFrame): high_p = high_p.iloc[:, 0]
     if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
 
+    # Override Close with Manual Price if enabled
+    if use_manual_price and manual_price_val > 0:
+        close.iloc[-1] = manual_price_val
+
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else ("$" if "=X" not in ticker else "")
     
     delta = close.diff()
@@ -307,7 +317,7 @@ if df is not None and not df.empty:
     stoch_k = 100 * ((close - low_14) / (high_14 - low_14))
     curr_stoch = float(stoch_k.iloc[-1]) if not stoch_k.empty and not pd.isna(stoch_k.iloc[-1]) else 50.0
 
-    price = 155.04 if ticker == "NBP.KA" else float(close.iloc[-1])
+    price = manual_price_val if (use_manual_price and manual_price_val > 0) else (155.04 if ticker == "NBP.KA" else float(close.iloc[-1]))
     prev_price = float(close.iloc[-2]) if len(close) > 1 else price
     price_change = price - prev_price
     pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
@@ -319,7 +329,7 @@ if df is not None and not df.empty:
     atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
     if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
 
-    pivot_p = (float(high_p.iloc[-1]) + float(low_p.iloc[-1]) + float(close.iloc[-1])) / 3
+    pivot_p = (float(high_p.iloc[-1]) + float(low_p.iloc[-1]) + price) / 3
     support_1 = (2 * pivot_p) - float(high_p.iloc[-1])
     resistance_1 = (2 * pivot_p) - float(low_p.iloc[-1])
 
@@ -403,7 +413,7 @@ if df is not None and not df.empty:
 
     c1, c2, c3 = st.columns(3)
     chg_col = "#00e676" if price_change >= 0 else "#ff1744"
-    c1.markdown(f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
+    c1.markdown(f'<div class="metric-card"><div class="metric-label">Price Used</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
@@ -415,7 +425,7 @@ if df is not None and not df.empty:
     with col_ai1:
         if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
             ai_direction = "UP 🟢 (Bullish Momentum)" if curr_rsi < 50 and m_val > s_val else ("DOWN 🔴 (Bearish Momentum)" if curr_rsi > 55 or m_val < s_val else "SIDEWAYS 🟠 (Consolidation)")
-            ai_reason = f"Based on RSI ({curr_rsi:.1f}), Stochastic ({curr_stoch:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name} on the {sel_tf} timeframe."
+            ai_reason = f"Based on price {cur_sym}{price:,.4f}, RSI ({curr_rsi:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name}."
             
             st.markdown(f"""
             <div class="ai-box">
@@ -431,19 +441,9 @@ if df is not None and not df.empty:
         <div class="ai-box">
             <h4 style="color: #ff9100; margin-top: 0;">📊 Market Sentiment (Fear & Greed):</h4>
             <p style="font-size: 15px; font-weight: bold; color: #00e676;">Index Status: {sentiment_text}</p>
-            <p style="font-size: 12px; color: #c9d1d9;">Calculated from momentum and volatility indicators.</p>
+            <p style="font-size: 12px; color: #c9d1d9;">Calculated from custom and live technical indicators.</p>
         </div>
         """, unsafe_allow_html=True)
-
-    # ✈️ Telegram Webhook Alert Sender
-    with st.expander("📲 Send Automated Telegram Alert", expanded=False):
-        tg_token = st.text_input("Bot API Token:", type="password")
-        tg_chat = st.text_input("Chat ID:")
-        if st.button("🚀 Broadcast Signal to Telegram"):
-            if tg_token and tg_chat:
-                st.success("✅ Telegram Alert simulated & broadcasted successfully!")
-            else:
-                st.warning("⚠️ Please provide valid Telegram Bot Token and Chat ID.")
 
     st.markdown("---")
     st.markdown("🛡️ **Auto Support & Resistance Levels:**")
@@ -461,7 +461,6 @@ if df is not None and not df.empty:
     ]
     st.dataframe(pd.DataFrame(mtf_data), use_container_width=True)
 
-    # 📥 Export Data to CSV Button
     csv_data = df.to_csv().encode('utf-8')
     st.download_button(label="📥 Download Chart Data as CSV", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
 
@@ -510,7 +509,7 @@ if df is not None and not df.empty:
     show_ema20 = col_t1.checkbox("EMA 20", value=True)
     show_ema50 = col_t2.checkbox("EMA 50", value=True)
     show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
+    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
 
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
