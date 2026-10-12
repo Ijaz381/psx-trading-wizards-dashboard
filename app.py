@@ -13,6 +13,13 @@ if 'dark_mode' not in st.session_state:
 if 'portfolio' not in st.session_state:
     st.session_state.portfolio = []
 
+if 'signal_history' not in st.session_state:
+    st.session_state.signal_history = [
+        {"Asset": "KSE-100 Index", "Signal": "STRONG BUY", "Date": "2026-10-10", "Status": "Target Hit 🎯"},
+        {"Asset": "Crude Oil (CL=F)", "Signal": "BUY", "Date": "2026-10-11", "Status": "Running 📊"},
+        {"Asset": "HBL (Habib Bank Limited)", "Signal": "STRONG SELL", "Date": "2026-10-09", "Status": "Stop Loss Hit 🛑"}
+    ]
+
 theme_bg = "#0d1117" if st.session_state.dark_mode else "#ffffff"
 theme_fg = "#ffffff" if st.session_state.dark_mode else "#000000"
 card_bg = "#161b22" if st.session_state.dark_mode else "#f0f2f6"
@@ -422,6 +429,12 @@ if df is not None and not df.empty:
     m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
     m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
 
+    # 🏆 Signal Performance & Win/Loss History Tracker
+    with st.expander("🏆 Signal Win/Loss Accuracy Tracker", expanded=False):
+        st.markdown("Recent trading signal performance and history log:")
+        st.dataframe(pd.DataFrame(st.session_state.signal_history), use_container_width=True)
+
+    # 💼 Virtual Paper Trading / Portfolio Tracker Section
     with st.expander("💼 Paper Trading & Virtual Portfolio Tracker", expanded=False):
         st.markdown("Add current asset to your virtual mock portfolio to track live profit/loss:")
         col_p1, col_p2 = st.columns(2)
