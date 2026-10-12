@@ -341,7 +341,7 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
-    # 🔊 RESTORED: Listen Signal Audio Button
+    # Audio Signal Button
     safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
@@ -366,22 +366,22 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🎙️ FIXED: Interactive Voice Assistant with Live Speech Answer
+    # 🎙️ Smart Interactive Voice Assistant (Clean UI)
     st.markdown("---")
-    ai_heading = "🤖 Voice AI Assistant (Speak & Listen Buy/Sell Advice)" if not is_urdu else "🤖 وائس اے آئی اسسٹنٹ (بول کر مشورہ سنیں)"
+    ai_heading = "🤖 Smart Voice AI Assistant" if not is_urdu else "🤖 اسمارٹ وائس اے آئی اسسٹنٹ"
     st.markdown(f"**{ai_heading}**")
     
-    ai_speech_advice = f"Analysis for {sel_name}. Signal is {sig}. Recommendation is {recommendation}. Live price is {cur_sym}{price:,.2f}."
+    ai_speech_advice = f"The trading signal for {sel_name} is {sig}. Recommendation is {recommendation}. Current price is {cur_sym}{price:,.2f}."
     
     voice_component_html = f"""
-    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15); font-family: sans-serif;">
-        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI RECOMMENDATION: {sel_name.upper()}</p>
-        <p style="font-size: 20px; font-weight: 900; color: {'#00e676' if recommendation=='BUY' else '#ff1744' if recommendation=='SELL' else '#ff9100'}; margin-bottom: 12px;">ACTION: {recommendation} ({sig})</p>
+    <div style="background: {card_bg}; border: 1px solid {border_col}; border-radius: 12px; padding: 15px; text-align: center; margin: 10px 0;">
+        <div style="font-size: 13px; color: #8b949e; font-weight: 700; margin-bottom: 5px;">CURRENT ANALYZED ASSET: <span style="color: #58a6ff;">{sel_name.upper()}</span></div>
+        <div style="font-size: 18px; font-weight: 900; color: {'#00e676' if recommendation=='BUY' else '#ff1744' if recommendation=='SELL' else '#ff9100'}; margin-bottom: 12px;">RECOMMENDATION: {recommendation} ({sig})</div>
         <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <button id="micAskBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🎙️ Speak & Analyze</button>
-            <button onclick="speakAdvice()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🗣️ Listen AI Advice</button>
+            <button id="micAskBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🎙️ Speak & Ask AI</button>
+            <button onclick="speakAdvice()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🗣️ Listen Voice Advice</button>
         </div>
-        <p id="voiceStatus" style="color: #58a6ff; font-size: 12px; margin-top: 10px; font-weight: 600;"></p>
+        <p id="voiceStatus" style="color: #00e676; font-size: 12px; margin-top: 10px; font-weight: 600;"></p>
     </div>
     <script>
     function speakAdvice() {{
@@ -398,16 +398,16 @@ if df is not None and not df.empty:
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        micAskBtn.addEventListener("click", () => {{ recognition.start(); voiceStatus.innerText = "Listening... Speak your query!"; }});
+        micAskBtn.addEventListener("click", () => {{ recognition.start(); voiceStatus.innerText = "Listening... Speak now!"; }});
         recognition.onresult = (event) => {{ 
             const userText = event.results[0][0].transcript;
-            voiceStatus.innerText = "You asked: " + userText;
+            voiceStatus.innerText = "Asked: '" + userText + "' -> Speaking Analysis...";
             speakAdvice(); 
         }};
     }}
     </script>
     """
-    components.html(voice_component_html, height=155)
+    components.html(voice_component_html, height=140)
 
     # Advanced Institutional Indicators Row
     st.markdown("---")
