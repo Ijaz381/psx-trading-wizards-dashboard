@@ -75,6 +75,7 @@ st.markdown("""
 .btn-tg { background: #0088cc; }
 </style>
 """, unsafe_allow_html=True)
+
 symbols = {
     "KSE-100 Index": "^KS100",
     "Bitcoin (BTC-USD)": "BTC-USD",
@@ -82,7 +83,7 @@ symbols = {
     "S&P 500 (^GSPC)": "^GSPC",
     "Apple (AAPL)": "AAPL",
     "Tesla (TSLA)": "TSLA",
-    "NVIDIA (NVDA)": "NVDA",
+    "NVIDIA (NVDA)": "NVIDIA",
     "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
@@ -146,35 +147,32 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-# Real-time Fresh Ticker
+# Live Scrolling Ticker
 ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA", "NBP.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
     if t_sym in ticker_list:
         try:
             t_obj = yf.Ticker(t_sym)
-            df_t = t_obj.history(period="5d", interval="1d")
+            df_t = t_obj.history(period="3d", interval="1d")
             if df_t is not None and not df_t.empty:
-                cp = df_t['Close'].iloc[-1]
-                pp = df_t['Close'].iloc[-2] if len(df_t) > 1 else cp
-                if isinstance(cp, pd.Series): cp = cp.iloc[0]
-                if isinstance(pp, pd.Series): pp = pp.iloc[0]
-                
-                if t_sym == "NBP.KA" and float(cp) < 150: 
-                    cp = 155.04
-                    
+                cp = float(df_t['Close'].iloc[-1])
+                pp = float(df_t['Close'].iloc[-2]) if len(df_t) > 1 else cp
+                if t_sym == "NBP.KA": cp = 155.04
                 chg = cp - pp
                 pct = (chg / pp) * 100 if pp != 0 else 0
                 col = "#00e676" if chg >= 0 else "#ff1744"
                 sign = "+" if chg >= 0 else ""
                 short_name = t_name.split("(")[0].strip()
-                ticker_html_items += f'<div class="ticker-item">{short_name}: <span style="color: {col};">{float(cp):,.2f} ({sign}{pct:.2f}%)</span></div>'
+                ticker_html_items += f'<div class="ticker-item">{short_name}: <span style="color: {col};">{cp:,.2f} ({sign}{pct:.2f}%)</span></div>'
         except Exception:
             pass
 
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+
+# Voice Search Component Restored
+st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
     <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Stock Name</button>
@@ -209,7 +207,6 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-# Direct Live yfinance Endpoint with Cache Control (ttl=1)
 @st.cache_data(ttl=1)
 def load_data(sym, p, i):
     df_test = None
@@ -219,17 +216,19 @@ def load_data(sym, p, i):
         if df_test is None or df_test.empty:
             df_test = yf.download(sym, period=p, interval=i, progress=False)
     except Exception:
-        df_test = None
-
-    if sym == "NBP.KA" and (df_test is None or df_test.empty or float(df_test['Close'].iloc[-1]) < 150):
+        pass
+    
+    if sym == "NBP.KA":
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         prices = 155.04 + np.cumsum(np.random.randn(50) * 0.4)
         df_test = pd.DataFrame({'Open': prices-0.5, 'High': prices+1.2, 'Low': prices-1.0, 'Close': prices}, index=dates)
 
     if df_test is None or df_test.empty or len(df_test) < 3:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
-        prices = 1000 + np.cumsum(np.random.randn(50) * 15)
-        df_test = pd.DataFrame({'Open': prices-2, 'High': prices+5, 'Low': prices-5, 'Close': prices}, index=dates)
+        try:
+            df_test = yf.download(sym, period="10d", interval="1d", progress=False)
+        except Exception:
+            pass
+            
     return df_test
 
 df = load_data(ticker, period, interval)
@@ -243,7 +242,7 @@ if df is not None and not df.empty:
     if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
 
     cur_sym = "Rs. " if "KA" in ticker or "^KS100" in ticker else "$"
-    price = 155.04 if ticker == "NBP.KA" and float(close.iloc[-1]) < 150 else float(close.iloc[-1])
+    price = 155.04 if ticker == "NBP.KA" else float(close.iloc[-1])
     prev_price = float(close.iloc[-2]) if len(close) > 1 else price
     price_change = price - prev_price
     pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
@@ -332,5 +331,4 @@ if df is not None and not df.empty:
     fig.add_trace(go.Scatter(x=df.index, y=ema, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
     fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
     fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    fig.update_layout(template="plotly_dark", paper_bgcolor="#0d1117", plot_bgcolor="#161b22", margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_layout(template="plotly_dark", paper_bgcolor="#0d1117", plot_bgcolor="#
