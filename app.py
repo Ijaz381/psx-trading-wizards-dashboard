@@ -350,7 +350,7 @@ symbols = {
     "S&P 500 (^GSPC)": "^GSPC",
     "Apple (AAPL)": "AAPL",
     "Tesla (TSLA)": "TSLA",
-    "NVIDIA (NVDA)": "NVDA",
+    "NVIDIA (NVDA)": "NVIDIA",
     "Microsoft (MSFT)": "MSFT",
     "ABOT (Abbott Laboratories)": "ABOT.KA",
     "AHCL (Arif Habib Corp)": "AHCL.KA",
@@ -401,7 +401,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Live Pakistan Digital Clock & Auto-Refresh JavaScript Component
 clock_component_code = """
 <script>
 function updateClock() {
@@ -415,7 +414,6 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// Auto reload page every 30 seconds to keep live data fresh
 setTimeout(function(){
    window.location.reload(1);
 }, 30000);
@@ -423,7 +421,6 @@ setTimeout(function(){
 """
 components.html(clock_component_code, height=0)
 
-# Live Market Scrolling Ticker right below header
 ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -511,7 +508,6 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 """
 components.html(voice_search_code, height=75)
 
-# Market Overview Expander Table
 with st.expander("📊 Market Overview & Live Summary", expanded=False):
     st.markdown("Live price overview across major indices & key shares:")
     overview_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA"]
@@ -543,66 +539,4 @@ with st.expander("📊 Market Overview & Live Summary", expanded=False):
         st.dataframe(pd.DataFrame(overview_data), use_container_width=True)
 
 search_query = st.text_input("🔍 Type to Search Stock / Share Name:", "")
-filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
-if not filtered_symbols:
-    filtered_symbols = symbols
-
-sel_name = st.selectbox("Select Market / Share", list(filtered_symbols.keys()))
-sel_tf = st.selectbox("Select Timeframe", ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
-
-ticker = symbols[sel_name]
-
-tf_map = {
-    "1 Minute": ("1d", "1m"),
-    "5 Minutes": ("5d", "5m"),
-    "15 Minutes": ("10d", "15m"),
-    "1 Hour": ("30d", "60m"),
-    "4 Hours": ("60d", "60m"),
-    "Daily (1D)": ("6mo", "1d"),
-    "Weekly (1W)": ("2y", "1wk")
-}
-period, interval = tf_map[sel_tf]
-
-st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
-
-# Optimized TTL (1 second) with Real-time yf.Ticker Endpoint
-@st.cache_data(ttl=1)
-def load_data(sym, p, i):
-    df_test = None
-    try:
-        t_obj = yf.Ticker(sym)
-        df_test = t_obj.history(period="5d", interval="1m")
-        if df_test is None or df_test.empty:
-            df_test = yf.download(sym, period=p, interval=i, progress=False)
-    except Exception:
-        pass
-        
-    if df_test is None or df_test.empty or len(df_test) < 2:
-        try:
-            df_test = yf.download(sym, period="10d", interval="1d", progress=False)
-        except Exception:
-            pass
-            
-    if df_test is None or df_test.empty or len(df_test) < 2:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
-        np.random.seed(42)
-        prices = 1000 + np.cumsum(np.random.randn(50) * 15)
-        df_test = pd.DataFrame({
-            'Open': prices - np.random.randn(50)*2,
-            'High': prices + np.abs(np.random.randn(50)*5),
-            'Low': prices - np.abs(np.random.randn(50)*5),
-            'Close': prices
-        }, index=dates)
-        
-    return df_test
-
-df = load_data(ticker, period, interval)
-
-if df is not None and not df.empty:
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-        
-    close = df['Close']
-    open_p = df['Open'] if 'Open' in df.columns else close
-    high_p = df['High'] if 'High' in df.columns else close
-    low_p = df['Low'] if 'Low' in df.columns else close
+filtered_
