@@ -458,7 +458,6 @@ if df is not None and not df.empty:
     tp = price * 1.05
     sl = price * 0.97
     
-    # Render Bullish/Bearish counts and Signal Box exactly like original design
     st.markdown(f"""
     <div style="display: flex; justify-content: space-around; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px; margin-bottom: 10px;">
         <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 18px;">24</b></div>
@@ -477,4 +476,56 @@ if df is not None and not df.empty:
                 </div>
             </div>
         </div>
-        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight
+        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #00e676; margin-top: 10px; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(0,230,118,0.5);">STRONG BUY</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    listen_signal_code = f"""
+    <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+        <button onclick="alert('Playing Technical Market Signal Audio for {sel_name}')" style="
+            background: linear-gradient(135deg, #00e676, #00b0ff);
+            color: #0d1117;
+            font-weight: 900;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.6);
+            font-family: 'Poppins', sans-serif;
+        ">
+            🔊 Listen Signal
+        </button>
+    </div>
+    """
+    components.html(listen_signal_code, height=45)
+
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-label">LIVE PRICE</div>
+        <div class="metric-val">{cur_sym}{price:,.2f}</div>
+        <div class="metric-sub" style="color: {'#00e676' if price_change >= 0 else '#ff1744'};">
+            {'+' if price_change >= 0 else ''}{price_change:,.2f} ({'+' if price_pct >= 0 else ''}{price_pct:.2f}%)
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">TARGET (TP)</div>
+        <div class="metric-val">{cur_sym}{tp:,.2f}</div>
+        <div class="metric-sub" style="color: #00e676;">Take-Profit</div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">STOP LOSS (SL)</div>
+        <div class="metric-val">{cur_sym}{sl:,.2f}</div>
+        <div class="metric-sub" style="color: #ff1744;">Risk Shield</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    share_text = urllib.parse.quote(f"PSX Trading Wizards Signal - {sel_name}: Price {cur_sym}{price:,.2f} ({'+' if price_change >= 0 else ''}{price_pct:.2f}%) | Target: {cur_sym}{tp:,.2f}")
+    st.markdown(f"""
+    <div class="share-container">
+        <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" class="share-btn btn-wa">💬 Share on WhatsApp</a>
+        <a href="https://t.me/share/url?url=&text={share_text}" target="_blank" class="share-btn btn-tg">✈️ Share on Telegram</a>
+    </div>
+    """, unsafe_allow_html=True)
