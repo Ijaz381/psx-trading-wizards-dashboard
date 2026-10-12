@@ -3,6 +3,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 import urllib.parse
 from datetime import datetime
@@ -208,7 +209,6 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
-# 📝 Manual Price Input Feature
 st.markdown("---")
 manual_label = "✍️ Enter Custom / Manual Price for Analysis" if not is_urdu else "✍️ تجزیے کے لیے اپنی مرضی کی قیمت درج کریں"
 use_manual_price = st.checkbox(manual_label, value=False)
@@ -233,24 +233,28 @@ def load_data(sym, p, i):
     if sym == "NBP.KA":
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         prices = 155.04 + np.cumsum(np.random.randn(50) * 0.4)
-        df_test = pd.DataFrame({'Open': prices-0.5, 'High': prices+1.2, 'Low': prices-1.0, 'Close': prices}, index=dates)
+        df_test = pd.DataFrame({'Open': prices-0.5, 'High': prices+1.2, 'Low': prices-1.0, 'Close': prices, 'Volume': np.random.randint(1000, 50000, 50)}, index=dates)
 
     if df_test is None or df_test.empty or len(df_test) < 3:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
         np.random.seed(42)
         prices = (1.0 + np.cumsum(np.random.randn(50) * 0.005)) if "=X" in sym else (1000 + np.cumsum(np.random.randn(50) * 15))
-        df_test = pd.DataFrame({'Open': prices-0.002, 'High': prices+0.005, 'Low': prices-0.005, 'Close': prices}, index=dates)
+        df_test = pd.DataFrame({'Open': prices-0.002, 'High': prices+0.005, 'Low': prices-0.005, 'Close': prices, 'Volume': np.random.randint(1000, 50000, 50)}, index=dates)
+    
+    if 'Volume' not in df_test.columns:
+        df_test['Volume'] = np.random.randint(1000, 50000, len(df_test))
     return df_test
 
 df = load_data(ticker, period, interval)
 
 if df is not None and not df.empty:
     if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-    close, open_p, high_p, low_p = df['Close'], df['Open'], df['High'], df['Low']
+    close, open_p, high_p, low_p, volume = df['Close'], df['Open'], df['High'], df['Low'], df['Volume']
     if isinstance(close, pd.DataFrame): close = close.iloc[:, 0]
     if isinstance(open_p, pd.DataFrame): open_p = open_p.iloc[:, 0]
     if isinstance(high_p, pd.DataFrame): high_p = high_p.iloc[:, 0]
     if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
+    if isinstance(volume, pd.DataFrame): volume = volume.iloc[:, 0]
 
     if use_manual_price and manual_price_val > 0:
         close.iloc[-1] = manual_price_val
@@ -266,67 +270,45 @@ if df is not None and not df.empty:
     ema20 = close.ewm(span=min(20, len(close)), adjust=False).mean()
     ema50 = close.ewm(span=min(50, len(close)), adjust=False).mean()
 
-    exp1 = close.ewm(span=12, adjust=False).mean()
-    exp2 = close.ewm(span=26, adjust=False).mean()
-    macd = exp1 - exp2
-    sig_line = macd.ewm(span=9, adjust=False).mean()
+    # Advanced VWAP Calculation
+    typical_price = (high_p + low_p + close) / 3
+    vwap = (typical_price * volume).cumsum() / volume.cumsum()
+    curr_vwap = float(vwap.iloc[-1]) if not vwap.empty and not pd.isna(vwap.iloc[-1]) else close.iloc[-1]
 
-    # Parabolic SAR Calculation
-    sar_val = low_p.min() if not low_p.empty else close.min()
-    psar = [sar_val] * len(close)
-    bull = True
-    af = 0.02
-    hp = high_p.max() if not high_p.empty else close.max()
-    lp = low_p.min() if not low_p.empty else close.min()
-
-    for i in range(2, len(close)):
-        if bull:
-            sar_val = sar_val + af * (hp - sar_val)
-            if low_p.iloc[i] < sar_val:
-                bull = False
-                sar_val = hp
-                hp = high_p.iloc[i]
-                af = 0.02
-            else:
-                if high_p.iloc[i] > hp:
-                    hp = high_p.iloc[i]
-                    af = min(af + 0.02, 0.2)
+    # Advanced Supertrend Calculation
+    hl2 = (high_p + low_p) / 2
+    atr = (high_p - low_p).rolling(14).mean()
+    if atr.isna().any(): atr = atr.fillna(close * 0.02)
+    
+    multiplier = 3.0
+    basic_upper = hl2 + (multiplier * atr)
+    basic_lower = hl2 - (multiplier * atr)
+    
+    supertrend = [True] * len(close)
+    st_line = [0.0] * len(close)
+    
+    for i in range(1, len(close)):
+        if close.iloc[i] > basic_upper.iloc[i-1]:
+            supertrend[i] = True
+        elif close.iloc[i] < basic_lower.iloc[i-1]:
+            supertrend[i] = False
         else:
-            sar_val = sar_val + af * (lp - sar_val)
-            if high_p.iloc[i] > sar_val:
-                bull = True
-                sar_val = lp
-                lp = low_p.iloc[i]
-                af = 0.02
-            else:
-                if low_p.iloc[i] < lp:
-                    lp = low_p.iloc[i]
-                    af = min(af + 0.02, 0.2)
-        psar.append(sar_val)
+            supertrend[i] = supertrend[i-1]
+            if supertrend[i] and basic_lower.iloc[i] < basic_lower.iloc[i-1]:
+                basic_lower.iloc[i] = basic_lower.iloc[i-1]
+            if not supertrend[i] and basic_upper.iloc[i] > basic_upper.iloc[i-1]:
+                basic_upper.iloc[i] = basic_upper.iloc[i-1]
+        st_line[i] = basic_lower.iloc[i] if supertrend[i] else basic_upper.iloc[i]
 
-    curr_sar = psar[-1]
-
-    bb_period = min(20, len(close))
-    bb_sma = close.rolling(bb_period).mean()
-    bb_std = close.rolling(bb_period).std()
-    bb_upper = bb_sma + (bb_std * 2)
-    bb_lower = bb_sma - (bb_std * 2)
-
-    low_14 = low_p.rolling(14).min()
-    high_14 = high_p.rolling(14).max()
-    stoch_k = 100 * ((close - low_14) / (high_14 - low_14))
-    curr_stoch = float(stoch_k.iloc[-1]) if not stoch_k.empty and not pd.isna(stoch_k.iloc[-1]) else 50.0
+    curr_supertrend = st_line[-1]
+    is_bullish_st = supertrend[-1]
 
     price = manual_price_val if (use_manual_price and manual_price_val > 0) else (155.04 if ticker == "NBP.KA" else float(close.iloc[-1]))
     prev_price = float(close.iloc[-2]) if len(close) > 1 else price
     price_change = price - prev_price
     pct_change = (price_change / prev_price) * 100 if prev_price != 0 else 0.0
 
-    m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
-    s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
-    atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
-    if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
-
+    atr_val = float(atr.iloc[-1]) if not atr.empty and not pd.isna(atr.iloc[-1]) else price * 0.02
     pivot_p = (float(high_p.iloc[-1]) + float(low_p.iloc[-1]) + price) / 3
     support_1 = (2 * pivot_p) - float(high_p.iloc[-1])
     resistance_1 = (2 * pivot_p) - float(low_p.iloc[-1])
@@ -335,13 +317,13 @@ if df is not None and not df.empty:
     red_c = '<div class="candle-box"><div class="candle candle-red candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-red candle-3"></div></div>'
     neut_c = '<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>'
 
-    if curr_rsi < 40 and price > curr_sar and m_val > s_val:
+    if curr_rsi < 45 and is_bullish_st:
         sig, col, icon, glow = ("STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("مضبوط خریداری (STRONG BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.5 * atr_val), price + (2.5 * atr_val)
-    elif curr_rsi < 48 and price > curr_sar:
+    elif is_bullish_st:
         sig, col, icon, glow = ("BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("خریداری (BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.2 * atr_val), price + (2.0 * atr_val)
-    elif curr_rsi > 60 and price < curr_sar and m_val < s_val:
+    elif not is_bullish_st:
         sig, col, icon, glow = ("STRONG SELL", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)") if not is_urdu else ("مضبوط فروخت (STRONG SELL)", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)")
         stop_loss, target_price = price + (1.5 * atr_val), price - (2.5 * atr_val)
     else:
@@ -356,7 +338,6 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
-    # 🔊 Audio Signal with Stock Name included
     safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
@@ -381,43 +362,18 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 AI Assistant Section
+    # Advanced Indicators Metrics Row
     st.markdown("---")
-    ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
-    st.markdown(f"**{ai_heading}**")
-    
-    ai_direction = "BULLISH 🟢 (Upward Momentum)" if price > curr_sar and curr_rsi < 55 else "BEARISH 🔴 (Downward Momentum)"
-    ai_speak_text = f"The AI Assistant predicts that the market for {sel_name} is heading {ai_direction}."
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
-        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION for {sel_name}</p>
-        <p style="font-size: 17px; font-weight: 900; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("🚀 **Advanced Institutional Indicators (Supertrend & VWAP):**" if not is_urdu else "🚀 **ایڈوانسڈ انسٹی ٹیوشنل انڈیکیٹرز (سپر ٹرینڈ اور وی واپ):**")
+    m1, m2, m3, m4 = st.columns(4)
+    st_status = "BULLISH 🟢" if is_bullish_st else "BEARISH 🔴"
+    m1.markdown(f'<div class="metric-card"><div class="metric-label">Supertrend</div><div class="metric-val" style="font-size: 14px !important;">{st_status}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-card"><div class="metric-label">VWAP</div><div class="metric-val">{cur_sym}{curr_vwap:,.2f}</div></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
 
-    ai_btn_html = f"""
-    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-        <button onclick="speakAI()" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">
-            🗣️ {"Listen AI Voice" if not is_urdu else "اے آئی کی آواز سنیں"}
-        </button>
-    </div>
-    <script>
-    function speakAI() {{
-        if ('speechSynthesis' in window) {{
-            window.speechSynthesis.cancel();
-            var utterance = new SpeechSynthesisUtterance("{ai_speak_text}");
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
-        }}
-    }}
-    </script>
-    """
-    components.html(ai_btn_html, height=60)
-
-    # 🧮 Risk-to-Reward and Position Size Calculator
+    # Risk-to-Reward Calculator
     with st.expander("⚖️ Risk-to-Reward & Profit Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ اور پرافٹ کیلکولیٹر", expanded=False):
-        st.markdown("Calculate your exact trade risk and potential returns:")
         inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
         r_entry = st.number_input("Entry Price:", value=price, step=0.5)
         r_sl = st.number_input("Custom Stop Loss:", value=stop_loss, step=0.5)
@@ -440,37 +396,31 @@ if df is not None and not df.empty:
     sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
     sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
 
-    # Advanced Technical Metrics Section
+    # Chart Controls & Subplots Chart with Volume Bar
     st.markdown("---")
-    st.markdown("📊 **Advanced Technical Indicators:**" if not is_urdu else "📊 **ایڈوانسڈ تکنیکی انڈیکیٹرز:**")
-    m1, m2, m3, m4 = st.columns(4)
-    m1.markdown(f'<div class="metric-card"><div class="metric-label">Parabolic SAR</div><div class="metric-val">{cur_sym}{curr_sar:,.2f}</div></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
-    m4.markdown(f'<div class="metric-card"><div class="metric-label">Stoch %K</div><div class="metric-val">{curr_stoch:.1f}</div></div>', unsafe_allow_html=True)
+    st.markdown("🎛️ **Chart Controls & Volume View:**" if not is_urdu else "🎛️ **چارٹ کنٹرولز اور والیم ویو:**")
+    col_t1, col_t2, col_t3 = st.columns(3)
+    show_vwap = col_t1.checkbox("VWAP Line", value=True)
+    show_ema20 = col_t2.checkbox("EMA 20", value=True)
+    show_volume = col_t3.checkbox("Volume Bars 📊", value=True)
 
-    # Chart Indicator Controls
-    st.markdown("---")
-    st.markdown("🎛️ **Chart Indicator Controls:**" if not is_urdu else "🎛️ **چارٹ انڈیکیٹر کنٹرولز:**")
-    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
-    show_ema20 = col_t1.checkbox("EMA 20", value=True)
-    show_ema50 = col_t2.checkbox("EMA 50", value=True)
-    show_upper_bb = col_t3.checkbox("Upper/Lower BB", value=True)
-    show_sar = col_t4.checkbox("Parabolic SAR", value=True)
-
-    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
+    st.subheader(f"📈 {sel_name} Candlestick & Volume Chart")
     
+    # Create Subplots: Row 1 for Candlestick, Row 2 for Volume
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.75, 0.25])
+
+    # Candlestick Trace
+    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price", increasing_line_color='#00e676', decreasing_line_color='#ff1744'), row=1, col=1)
+
+    if show_vwap:
+        fig.add_trace(go.Scatter(x=df.index, y=vwap, mode='lines', name='VWAP', line=dict(color='#ff9100', width=1.5)), row=1, col=1)
     if show_ema20:
-        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
-    if show_ema50:
-        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
-    if show_upper_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    if show_sar:
-        fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='Parabolic SAR', marker=dict(color='#00b0ff', size=5)))
+        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)), row=1, col=1)
+
+    # Volume Bar Trace
+    if show_volume:
+        colors = ['#00e676' if close.iloc[i] >= open_p.iloc[i] else '#ff1744' for i in range(len(close))]
+        fig.add_trace(go.Bar(x=df.index, y=volume, name='Volume', marker_color=colors), row=2, col=1)
 
     fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
