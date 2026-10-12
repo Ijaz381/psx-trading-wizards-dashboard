@@ -208,7 +208,7 @@ tf_map = {
 }
 period, interval = tf_map[sel_tf]
 
-# 📝 Manual Price Input Feature Restored
+# 📝 Manual Price Input Feature
 st.markdown("---")
 manual_label = "✍️ Enter Custom / Manual Price for Analysis" if not is_urdu else "✍️ تجزیے کے لیے اپنی مرضی کی قیمت درج کریں"
 use_manual_price = st.checkbox(manual_label, value=False)
@@ -415,7 +415,7 @@ if df is not None and not df.empty:
     """
     components.html(ai_btn_html, height=60)
 
-    # 🧮 Risk-to-Reward and Position Size Calculator Restored
+    # 🧮 Risk-to-Reward and Position Size Calculator
     with st.expander("⚖️ Risk-to-Reward & Profit Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ اور پرافٹ کیلکولیٹر", expanded=False):
         st.markdown("Calculate your exact trade risk and potential returns:")
         inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
@@ -434,7 +434,7 @@ if df is not None and not df.empty:
             st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
 
     st.markdown("---")
-    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آటో سپورٹ اور ریزسٹنس لیولز:**")
+    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آٹو سپورٹ اور ریزسٹنس لیولز:**")
     sr1, sr2, sr3 = st.columns(3)
     sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
     sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
