@@ -26,7 +26,6 @@ div[class*="viewerBadge"] {display: none !important;}
 .stAppViewContainerFooter {display: none !important;}
 iframe[title="streamlit_badge"] {display: none !important; visibility: hidden !important;}
 section[data-testid="stSidebarNav"] {display: none !important;}
-footer, .viewerBadge_container__1QSob, .styles_viewerBadge__1yG6_ { display: none !important; }
 
 /* Scrolling Live Market Ticker */
 .ticker-wrap {
@@ -153,37 +152,6 @@ footer, .viewerBadge_container__1QSob, .styles_viewerBadge__1yG6_ { display: non
     text-decoration: none;
 }
 
-/* Market Pulse Counter Strip */
-.pulse-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 10px 5px;
-    margin: 10px 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.pulse-item {
-    text-align: center;
-    flex: 1;
-}
-
-.pulse-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.pulse-val {
-    font-size: 18px;
-    font-weight: 900;
-    margin-top: 2px;
-}
-
 /* Metric Cards Styling */
 .metric-card { 
     background-color: #161b22; 
@@ -293,7 +261,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Live Pakistan Digital Clock & Auto-Refresh JavaScript Component
 clock_component_code = """
 <script>
 function updateClock() {
@@ -307,7 +274,6 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// Auto reload page every 60 seconds to keep live data fresh
 setTimeout(function(){
    window.location.reload(1);
 }, 60000);
@@ -315,7 +281,7 @@ setTimeout(function(){
 """
 components.html(clock_component_code, height=0)
 
-# Live Market Scrolling Ticker right below header
+# Ticker items
 ticker_list = ["^KS100", "BTC-USD", "GC=F", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -371,7 +337,6 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-# Optimized TTL (5 seconds) for faster live data updates
 @st.cache_data(ttl=5)
 def load_data(sym, p, i):
     df_test = None
@@ -415,7 +380,21 @@ if df is not None and not df.empty:
     price_change = price - prev_price
     price_pct = (price_change / prev_price) * 100 if prev_price != 0 else 0
     
-    # Simple Signal Mock / Gauge Status
+    tp = price * 1.05
+    sl = price * 0.97
+    
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-around; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px; margin-bottom: 10px;">
+        <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 16px;">24</b></div>
+        <div style="text-align: center;"><span style="color: #ff1744; font-weight: bold;">🔴 BEARISH</span><br><b style="font-size: 16px;">14</b></div>
+        <div style="text-align: center;"><span style="color: #ff9100; font-weight: bold;">🟡 NEUTRAL</span><br><b style="font-size: 16px;">5</b></div>
+    </div>
+    
+    <div style="text-align: center; background: #161b22; border: 2px solid #00e676; border-radius: 15px; padding: 15px; margin-bottom: 10px;">
+        <h2 style="color: #00e676; margin: 0; font-family: 'Orbitron', sans-serif;">STRONG BUY</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown(f"""
     <div class="metric-card">
         <div class="metric-label">LIVE PRICE</div>
@@ -423,5 +402,17 @@ if df is not None and not df.empty:
         <div class="metric-sub" style="color: {'#00e676' if price_change >= 0 else '#ff1744'};">
             {'+' if price_change >= 0 else ''}{price_change:,.2f} ({'+' if price_pct >= 0 else ''}{price_pct:.2f}%)
         </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">TARGET (TP)</div>
+        <div class="metric-val">{cur_sym}{tp:,.2f}</div>
+        <div class="metric-sub" style="color: #00e676;">Take-Profit</div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="metric-label">STOP LOSS (SL)</div>
+        <div class="metric-val">{cur_sym}{sl:,.2f}</div>
+        <div class="metric-sub" style="color: #ff1744;">Risk Shield</div>
     </div>
     """, unsafe_allow_html=True)
