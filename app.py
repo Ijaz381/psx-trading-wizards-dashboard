@@ -152,6 +152,99 @@ section[data-testid="stSidebarNav"] {display: none !important;}
     text-decoration: none;
 }
 
+/* Enhanced Center Animated Candlestick Indicator */
+.circle-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    margin: 10px 0; 
+}
+
+.glow-circle-wrapper {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glow-circle-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px dashed #00e676;
+    animation: rotateRing 8s linear infinite;
+}
+
+@keyframes rotateRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.glow-circle { 
+    width: 105px; 
+    height: 105px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background: radial-gradient(circle, #1c2128 0%, #0d1117 100%); 
+    box-shadow: 0 0 30px rgba(0, 230, 118, 0.5);
+    border: 3px solid #00e676;
+    animation: pulseGlow 1.8s ease-in-out infinite alternate;
+    z-index: 2;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(0.95); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
+    100% { transform: scale(1.06); box-shadow: 0 0 40px rgba(0, 230, 118, 0.95); }
+}
+
+/* Custom Animated Candlestick Graphics */
+.candle-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 50px;
+}
+
+.candle {
+    position: relative;
+    width: 8px;
+    border-radius: 2px;
+    animation: candleBounce 1.5s ease-in-out infinite alternate;
+}
+
+.candle::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 3px;
+    width: 2px;
+    height: 22px;
+    background-color: currentColor;
+    z-index: -1;
+}
+
+.candle-green {
+    background-color: #00e676;
+    color: #00e676;
+    box-shadow: 0 0 10px #00e676;
+}
+
+.candle-1 { height: 20px; animation-delay: 0s; }
+.candle-2 { height: 32px; animation-delay: 0.3s; }
+.candle-3 { height: 26px; animation-delay: 0.6s; }
+
+@keyframes candleBounce {
+    0% { transform: translateY(0) scaleY(0.9); }
+    100% { transform: translateY(-4px) scaleY(1.1); }
+}
+
 /* Metric Cards Styling */
 .metric-card { 
     background-color: #161b22; 
@@ -191,15 +284,8 @@ section[data-testid="stSidebarNav"] {display: none !important;}
     transform: translateY(-2px);
 }
 
-.btn-wa {
-    background: #25D366;
-    box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
-}
-
-.btn-tg {
-    background: #0088cc;
-    box-shadow: 0 0 12px rgba(0, 136, 204, 0.4);
-}
+.btn-wa { background: #25D366; box-shadow: 0 0 12px rgba(37, 211, 102, 0.4); }
+.btn-tg { background: #0088cc; box-shadow: 0 0 12px rgba(0, 136, 204, 0.4); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -372,52 +458,23 @@ if df is not None and not df.empty:
     tp = price * 1.05
     sl = price * 0.97
     
-    # Dynamic counts based on price trend
-    bull_count = 24 if price_change >= 0 else 18
-    bear_count = 14 if price_change >= 0 else 20
-    neut_count = 5
-    signal_text = "STRONG BUY" if price_change >= 0 else "HOLD / CAUTION"
-    signal_color = "#00e676" if price_change >= 0 else "#ff9100"
-
+    # Render Bullish/Bearish counts and Signal Box exactly like original design
     st.markdown(f"""
     <div style="display: flex; justify-content: space-around; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px; margin-bottom: 10px;">
-        <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 16px;">{bull_count}</b></div>
-        <div style="text-align: center;"><span style="color: #ff1744; font-weight: bold;">🔴 BEARISH</span><br><b style="font-size: 16px;">{bear_count}</b></div>
-        <div style="text-align: center;"><span style="color: #ff9100; font-weight: bold;">🟡 NEUTRAL</span><br><b style="font-size: 16px;">{neut_count}</b></div>
+        <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 18px;">24</b></div>
+        <div style="text-align: center;"><span style="color: #ff1744; font-weight: bold;">🔴 BEARISH</span><br><b style="font-size: 18px;">14</b></div>
+        <div style="text-align: center;"><span style="color: #ff9100; font-weight: bold;">🟡 NEUTRAL</span><br><b style="font-size: 18px;">5</b></div>
     </div>
     
-    <div style="text-align: center; background: #161b22; border: 2px solid {signal_color}; border-radius: 15px; padding: 15px; margin-bottom: 10px;">
-        <h2 style="color: {signal_color}; margin: 0; font-family: 'Orbitron', sans-serif;">{signal_text}</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">LATEST / CLOSING PRICE</div>
-        <div class="metric-val">{cur_sym}{price:,.2f}</div>
-        <div class="metric-sub" style="color: {'#00e676' if price_change >= 0 else '#ff1744'};">
-            {'+' if price_change >= 0 else ''}{price_change:,.2f} ({'+' if price_pct >= 0 else ''}{price_pct:.2f}%)
+    <div class="circle-container">
+        <div class="glow-circle-wrapper">
+            <div class="glow-circle-ring"></div>
+            <div class="glow-circle">
+                <div class="candle-box">
+                    <div class="candle candle-green candle-1"></div>
+                    <div class="candle candle-green candle-2"></div>
+                    <div class="candle candle-green candle-3"></div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="metric-card">
-        <div class="metric-label">TARGET (TP)</div>
-        <div class="metric-val">{cur_sym}{tp:,.2f}</div>
-        <div class="metric-sub" style="color: #00e676;">Take-Profit</div>
-    </div>
-    
-    <div class="metric-card">
-        <div class="metric-label">STOP LOSS (SL)</div>
-        <div class="metric-val">{cur_sym}{sl:,.2f}</div>
-        <div class="metric-sub" style="color: #ff1744;">Risk Shield</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Share Buttons
-    share_text = urllib.parse.quote(f"PSX Trading Wizards Signal - {sel_name}: Price {cur_sym}{price:,.2f} ({'+' if price_change >= 0 else ''}{price_pct:.2f}%) | Target: {cur_sym}{tp:,.2f}")
-    st.markdown(f"""
-    <div class="share-container">
-        <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" class="share-btn btn-wa">💬 Share on WhatsApp</a>
-        <a href="https://t.me/share/url?url=&text={share_text}" target="_blank" class="share-btn btn-tg">✈️ Share on Telegram</a>
-    </div>
-    """, unsafe_allow_html=True)
+        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight
