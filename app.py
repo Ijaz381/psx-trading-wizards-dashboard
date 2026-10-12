@@ -13,7 +13,6 @@ if 'theme_mode' not in st.session_state:
 st.sidebar.title("⚙️ Terminal Settings")
 st.session_state.theme_mode = st.sidebar.selectbox("Choose Theme:", ["Dark Mode 🌙", "Light Mode ☀️"], index=0 if "Dark" in st.session_state.theme_mode else 1)
 
-# Language Selector (English / Urdu)
 lang_choice = st.sidebar.selectbox("Select Language / زبان منتخب کریں:", ["English", "Urdu (اردو)"])
 is_urdu = "Urdu" in lang_choice
 
@@ -65,11 +64,6 @@ css_code = """
 .header-info-strip { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }
 .header-badge { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }
 .header-phone { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }
-
-.pulse-container { display: flex; justify-content: space-around; align-items: center; background: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 5px; margin: 10px 0; }
-.pulse-item { text-align: center; flex: 1; }
-.pulse-label { font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.pulse-val { font-size: 18px; font-weight: 900; margin-top: 2px; }
 
 .circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }
 .glow-circle-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }
@@ -196,27 +190,6 @@ for t_name, t_sym in symbols.items():
 
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
-
-voice_title = "🎙️ Voice Search & Filter Share" if not is_urdu else "🎙️ آواز سے سرچ کریں اور شیئر فلٹر کریں"
-st.markdown(f"<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>{voice_title}</h6>", unsafe_allow_html=True)
-
-components.html("""
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-family: sans-serif;">
-    <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Asset Name</button>
-    <div id="statusText" style="color: #58a6ff; font-size: 11px; font-weight: 500;">Click mic & speak name</div>
-</div>
-<script>
-const micBtn = document.getElementById("micBtn");
-const statusText = document.getElementById("statusText");
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    micBtn.addEventListener("click", () => { recognition.start(); statusText.innerText = "Listening..."; });
-    recognition.onresult = (event) => { statusText.innerText = "You said: " + event.results[0][0].transcript.toLowerCase(); };
-}
-</script>
-""", height=65)
 
 search_label = "🔍 Type to Search Stock / Forex / Global Assets:" if not is_urdu else "🔍 اسٹاک یا فاریکس تلاش کرنے کے لیے لکھیں:"
 asset_label = "Select Market / Asset" if not is_urdu else "مارکیٹ یا اثاثہ منتخب کریں"
@@ -405,24 +378,13 @@ if df is not None and not df.empty:
     """
     components.html(speak_html, height=55)
 
-    share_msg = urllib.parse.quote(f"🚨 PSX & Global Trading Wizards Signal 🚨\nAsset: {sel_name}\nSignal: {sig}\nPrice: {cur_sym}{price:,.4f}\nTarget: {cur_sym}{target_price:,.4f}\nStop Loss: {cur_sym}{stop_loss:,.4f}")
-    wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
-    tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
-
-    st.markdown(f'''
-    <div style="display: flex; gap: 10px; justify-content: center; margin: 12px 0;">
-        <a style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; background: #25D366; text-decoration: none;">📲 WhatsApp</a>
-        <a style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; background: #0088cc; text-decoration: none;">✈️ Telegram</a>
-    </div>
-    ''', unsafe_allow_html=True)
-
     c1, c2, c3 = st.columns(3)
     chg_col = "#00e676" if price_change >= 0 else "#ff1744"
     c1.markdown(f'<div class="metric-card"><div class="metric-label">{"Price Used" if not is_urdu else "موجودہ قیمت"}</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # Clean Modern Native AI Assistant Section (Fixed Layout)
+    # AI Assistant Section
     st.markdown("---")
     ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
     st.markdown(f"**{ai_heading}**")
@@ -456,31 +418,37 @@ if df is not None and not df.empty:
     """
     components.html(ai_btn_html, height=60)
 
-    # Risk-to-Reward Calculator
-    with st.expander("⚖️ Risk-to-Reward Ratio Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ کیلکولیٹر", expanded=False):
-        r_entry = st.number_input("Entry Price:", value=price, step=0.5)
-        r_sl = st.number_input("Stop Loss:", value=stop_loss, step=0.5)
-        r_tp = st.number_input("Take Profit:", value=target_price, step=0.5)
-        if r_entry > 0 and r_sl > 0 and r_tp > 0:
-            risk = abs(r_entry - r_sl)
-            reward = abs(r_tp - r_entry)
-            ratio = reward / risk if risk != 0 else 0
-            st.info(f"📊 Risk-to-Reward Ratio: 1 : {ratio:.2f}")
-
+    # Advanced Technical Metrics Section
     st.markdown("---")
-    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آటో سپورٹ اور ریزسٹنس لیولز:**")
-    sr1, sr2, sr3 = st.columns(3)
-    sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
-    sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
-    sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
+    st.markdown("📊 **Advanced Technical Indicators:**" if not is_urdu else "📊 **ایڈوانسڈ تکنیکی انڈیکیٹرز:**")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.markdown(f'<div class="metric-card"><div class="metric-label">Parabolic SAR</div><div class="metric-val">{cur_sym}{curr_sar:,.2f}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="metric-card"><div class="metric-label">Stoch %K</div><div class="metric-val">{curr_stoch:.1f}</div></div>', unsafe_allow_html=True)
 
-    csv_data = df.to_csv().encode('utf-8')
-    st.download_button(label="📥 Download CSV" if not is_urdu else "📥 سی ایس وی ڈاؤن لوڈ کریں", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
-
+    # Chart Indicator Controls
     st.markdown("---")
-    st.subheader("📈 Interactive Candlestick Chart" if not is_urdu else "📈 انٹرایکٹو کینڈل اسٹک چارٹ")
+    st.markdown("🎛️ **Chart Indicator Controls:**" if not is_urdu else "🎛️ **چارٹ انڈیکیٹر کنٹرولز:**")
+    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
+    show_ema20 = col_t1.checkbox("EMA 20", value=True)
+    show_ema50 = col_t2.checkbox("EMA 50", value=True)
+    show_upper_bb = col_t3.checkbox("Upper/Lower BB", value=True)
+    show_sar = col_t4.checkbox("Parabolic SAR", value=True)
+
+    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
     fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
-    fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='SAR', marker=dict(color='#00b0ff', size=5)))
-    fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False)
+    
+    if show_ema20:
+        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
+    if show_ema50:
+        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
+    if show_upper_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    if show_sar:
+        fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='Parabolic SAR', marker=dict(color='#00b0ff', size=5)))
+
+    fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
