@@ -120,7 +120,7 @@ symbols = {
 }
 
 st.sidebar.title("⚙️ Terminal Settings")
-if st.sidebar.button("🌓 Toggle Dark/Light Mode"):
+if st.sidebar.button("🌓 Toggle Dark / Light Theme"):
     st.session_state.dark_mode = not st.session_state.dark_mode
     st.rerun()
 
@@ -346,39 +346,38 @@ if df is not None and not df.empty:
     </div>
     ''', unsafe_allow_html=True)
 
-    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}."
-    
-    speak_html = """
+    # 🔊 Reliable Web Speech Integration via components.html
+    safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
+    speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
-        <button id="speakBtn" style="
+        <button onclick="playSignal()" style="
             background: linear-gradient(135deg, #00e676, #00b0ff);
             color: #000;
             font-weight: bold;
             border: none;
-            padding: 8px 20px;
+            padding: 10px 24px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 13px;
-            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
         ">
-            🔊 Listen Signal
+            🔊 Listen Signal Audio
         </button>
     </div>
     <script>
-    document.getElementById("speakBtn").addEventListener("click", function() {
-        if ('speechSynthesis' in window) {
+    function playSignal() {{
+        if ('speechSynthesis' in window) {{
             window.speechSynthesis.cancel();
-            var msg = new SpeechSynthesisUtterance("Trading signal for """ + sel_name + """ is """ + sig + """. Current price is """ + f"{price:,.4f}" + """);
-            msg.rate = 0.95;
-            window.speechSynthesis.speak(msg);
-        }
-    });
+            var utterance = new SpeechSynthesisUtterance("{safe_signal_text}");
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }} else {{
+            alert('Speech synthesis not supported in this browser.');
+        }}
+    }}
     </script>
     """
-    components.html(speak_html, height=45)
+    components.html(speak_html, height=55)
 
     share_msg = urllib.parse.quote(f"🚨 PSX & Global Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.4f}\nTarget: {cur_sym}{target_price:,.4f}\nStop Loss: {cur_sym}{stop_loss:,.4f}\n\nAnalyzed by Ijaz Sardar")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
@@ -438,7 +437,7 @@ if df is not None and not df.empty:
     show_ema20 = col_t1.checkbox("EMA 20", value=True)
     show_ema50 = col_t2.checkbox("EMA 50", value=True)
     show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
+    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
 
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
