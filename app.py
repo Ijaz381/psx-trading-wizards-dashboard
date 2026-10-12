@@ -270,12 +270,12 @@ if df is not None and not df.empty:
     ema20 = close.ewm(span=min(20, len(close)), adjust=False).mean()
     ema50 = close.ewm(span=min(50, len(close)), adjust=False).mean()
 
-    # Advanced VWAP Calculation
+    # VWAP Calculation
     typical_price = (high_p + low_p + close) / 3
     vwap = (typical_price * volume).cumsum() / volume.cumsum()
     curr_vwap = float(vwap.iloc[-1]) if not vwap.empty and not pd.isna(vwap.iloc[-1]) else close.iloc[-1]
 
-    # Advanced Supertrend Calculation
+    # Supertrend Calculation
     hl2 = (high_p + low_p) / 2
     atr = (high_p - low_p).rolling(14).mean()
     if atr.isna().any(): atr = atr.fillna(close * 0.02)
@@ -338,6 +338,7 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
+    # Audio Signal
     safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
     <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
@@ -362,7 +363,41 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # Advanced Indicators Metrics Row
+    # 🤖 Speaking AI Assistant Section (RESTORED!)
+    st.markdown("---")
+    ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
+    st.markdown(f"**{ai_heading}**")
+    
+    ai_direction = "BULLISH 🟢 (Upward Momentum)" if is_bullish_st and curr_rsi < 60 else "BEARISH 🔴 (Downward Momentum)"
+    ai_speak_text = f"The AI Assistant predicts that the market candle for {sel_name} is heading {ai_direction}."
+    
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
+        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION for {sel_name}</p>
+        <p style="font-size: 17px; font-weight: 900; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    ai_btn_html = f"""
+    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+        <button onclick="speakAI()" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">
+            🗣️ {"Listen AI Voice" if not is_urdu else "اے آئی کی آواز سنیں"}
+        </button>
+    </div>
+    <script>
+    function speakAI() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance("{ai_speak_text}");
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }}
+    }}
+    </script>
+    """
+    components.html(ai_btn_html, height=60)
+
+    # Advanced Institutional Indicators Row
     st.markdown("---")
     st.markdown("🚀 **Advanced Institutional Indicators (Supertrend & VWAP):**" if not is_urdu else "🚀 **ایڈوانسڈ انسٹی ٹیوشنل انڈیکیٹرز (سپر ٹرینڈ اور وی واپ):**")
     m1, m2, m3, m4 = st.columns(4)
@@ -396,7 +431,7 @@ if df is not None and not df.empty:
     sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
     sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
 
-    # Chart Controls & Subplots Chart with Volume Bar
+    # Chart Controls & Subplots
     st.markdown("---")
     st.markdown("🎛️ **Chart Controls & Volume View:**" if not is_urdu else "🎛️ **چارٹ کنٹرولز اور والیم ویو:**")
     col_t1, col_t2, col_t3 = st.columns(3)
@@ -406,10 +441,7 @@ if df is not None and not df.empty:
 
     st.subheader(f"📈 {sel_name} Candlestick & Volume Chart")
     
-    # Create Subplots: Row 1 for Candlestick, Row 2 for Volume
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.75, 0.25])
-
-    # Candlestick Trace
     fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price", increasing_line_color='#00e676', decreasing_line_color='#ff1744'), row=1, col=1)
 
     if show_vwap:
@@ -417,7 +449,6 @@ if df is not None and not df.empty:
     if show_ema20:
         fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)), row=1, col=1)
 
-    # Volume Bar Trace
     if show_volume:
         colors = ['#00e676' if close.iloc[i] >= open_p.iloc[i] else '#ff1744' for i in range(len(close))]
         fig.add_trace(go.Bar(x=df.index, y=volume, name='Volume', marker_color=colors), row=2, col=1)
