@@ -24,6 +24,12 @@ st.markdown("""
 .ticker-item { display: inline-block; padding: 0 25px; font-size: 13px; font-weight: 700; font-family: 'Poppins', sans-serif; }
 @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
+.news-banner {
+    background: linear-gradient(90deg, #ff9100, #ff3d00); color: #fff; padding: 8px 12px;
+    border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 10px;
+    box-shadow: 0 0 15px rgba(255, 145, 0, 0.4);
+}
+
 .logo-header-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 2px; margin-bottom: 5px; }
 .logo-img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #00e676; box-shadow: 0 0 25px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover; animation: logoGlow 3s infinite alternate; }
 @keyframes logoGlow { 0% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); } 100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(0, 230, 118, 0.95); } }
@@ -125,6 +131,9 @@ updateClock();
 setInterval(updateClock, 1000);
 </script>
 """, height=0)
+
+# 📰 Live Flash News Banner
+st.markdown('<div class="news-banner">🚨 <b>PSX Flash Alert:</b> Market trends showing strong momentum. Monitor key support & resistance levels closely! Managed by Ijaz Sardar (+92 300 7581169)</div>', unsafe_allow_html=True)
 
 ticker_list = ["^KS100", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA", "PPL.KA", "PSO.KA", "FFC.KA", "DGKC.KA"]
 ticker_html_items = ""
@@ -316,6 +325,7 @@ if df is not None and not df.empty:
     </script>
     """, height=45)
 
+    # 📲 WhatsApp & Telegram Direct Broadcast Links
     share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
     tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
@@ -333,12 +343,24 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.2f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
+    # 🎛️ Custom Chart Indicator Toggles
     st.markdown("---")
+    st.markdown("🎛️ **Chart Indicator Controls:**")
+    col_t1, col_t2, col_t3 = st.columns(3)
+    show_ema = col_t1.checkbox("Show EMA 50", value=True)
+    show_upper_bb = col_t2.checkbox("Show Upper BB", value=True)
+    show_lower_bb = col_t3.checkbox("Show Lower BB", value=True)
+
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
     fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
-    fig.add_trace(go.Scatter(x=df.index, y=ema, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
-    fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    
+    if show_ema:
+        fig.add_trace(go.Scatter(x=df.index, y=ema, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
+    if show_upper_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    if show_lower_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
+        
     fig.update_layout(template="plotly_dark", paper_bgcolor="#0d1117", plot_bgcolor="#161b22", margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
