@@ -145,9 +145,9 @@ for w_item in st.session_state.watchlist:
 
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
 
-header_html = f"""
+header_html = """
 <div class="logo-header-container">
-    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
+    <img src=\"""" + logo_url + """" class="logo-img" alt="PSX Logo">
     <div class="animated-title">PSX Trading Wizards</div>
     <div class="animated-author">By Ijaz Sardar</div>
     <div class="header-info-strip">
@@ -171,7 +171,6 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-# 📰 Modern News Theme Banner
 st.markdown('<div class="news-banner"><div>🔥 <b>MARKET FLASH:</b> US CPI & Central Bank Rate Decisions active. High volatility expected across Gold, Oil & Forex Pairs! Managed by Ijaz Sardar (+92 300 7581169)</div></div>', unsafe_allow_html=True)
 
 ticker_list = ["^KS100", "EURUSD=X", "GBPUSD=X", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA"]
@@ -190,12 +189,12 @@ for t_name, t_sym in symbols.items():
                 col = "#00e676" if chg >= 0 else "#ff1744"
                 sign = "+" if chg >= 0 else ""
                 short_name = t_name.split("(")[0].strip()
-                ticker_html_items += f'<div class="ticker-item">{short_name}: <span style="color: {col};">{cp:,.4f} ({sign}{pct:.2f}%)</span></div>'
+                ticker_html_items += '<div class="ticker-item">' + short_name + ': <span style="color: ' + col + ';">' + f"{cp:,.4f}" + ' (' + sign + f"{pct:.2f}" + '%)</span></div>'
         except Exception:
             pass
 
 if ticker_html_items:
-    st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="ticker-wrap"><div class="ticker">' + ticker_html_items + ticker_html_items + '</div></div>', unsafe_allow_html=True)
 
 st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
@@ -216,7 +215,6 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 </script>
 """, height=75)
 
-# Watchlist Quick Selector Option
 use_watchlist = st.checkbox("⭐ Quick Load from My Watchlist", value=False)
 if use_watchlist and st.session_state.watchlist:
     sel_name = st.selectbox("Select Asset from Watchlist", st.session_state.watchlist)
@@ -349,7 +347,8 @@ if df is not None and not df.empty:
     ''', unsafe_allow_html=True)
 
     signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}."
-    components.html(f"""
+    
+    speak_html = """
     <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
         <button id="speakBtn" style="
             background: linear-gradient(135deg, #00e676, #00b0ff);
@@ -369,5 +368,90 @@ if df is not None and not df.empty:
         </button>
     </div>
     <script>
-    document.getElementById("speakBtn").addEventListener("click", function() {{
+    document.getElementById("speakBtn").addEventListener("click", function() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            var msg = new SpeechSynthesisUtterance("Trading signal for """ + sel_name + """ is """ + sig + """. Current price is """ + f"{price:,.4f}" + """);
+            msg.rate = 0.95;
+            window.speechSynthesis.speak(msg);
+        }
+    });
+    </script>
+    """
+    components.html(speak_html, height=45)
+
+    share_msg = urllib.parse.quote(f"🚨 PSX & Global Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.4f}\nTarget: {cur_sym}{target_price:,.4f}\nStop Loss: {cur_sym}{stop_loss:,.4f}\n\nAnalyzed by Ijaz Sardar")
+    wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
+    tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
+
+    st.markdown(f'''
+    <div class="share-container">
+        <a class="share-btn btn-wa" href="{wa_url}" target="_blank">📲 Share on WhatsApp</a>
+        <a class="share-btn btn-tg" href="{tg_url}" target="_blank">✈️ Share on Telegram</a>
+    </div>
+    ''', unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+    chg_col = "#00e676" if price_change >= 0 else "#ff1744"
+    c1.markdown(f'<div class="metric-card"><div class="metric-label">Live Price</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("🛡️ **Auto Support & Resistance Levels:**")
+    sr1, sr2, sr3 = st.columns(3)
+    sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
+    sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
+    sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("🌐 **Multi-Timeframe Trend Matrix:**")
+    mtf_data = [
+        {"Timeframe": "15 Minutes", "Trend": "Bullish" if curr_rsi > 45 else "Bearish", "RSI": f"{curr_rsi:.1f}"},
+        {"Timeframe": "1 Hour", "Trend": "Bullish" if m_val > s_val else "Bearish", "RSI": f"{(curr_rsi + 2):.1f}"},
+        {"Timeframe": "Daily (1D)", "Trend": sig, "RSI": f"{(curr_rsi - 1):.1f}"}
+    ]
+    st.dataframe(pd.DataFrame(mtf_data), use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("📊 **Advanced Technical Metrics:**")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-card"><div class="metric-label">Stoch %K</div><div class="metric-val">{curr_stoch:.1f}</div></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
+
+    with st.expander("🧮 Position Size & Trade Profit Calculator", expanded=False):
+        st.markdown("Calculate your potential investment returns and required capital:")
+        inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
+        if price > 0:
+            shares_qty = inv_capital / price
+            potential_profit = shares_qty * (target_price - price)
+            potential_loss = shares_qty * (price - stop_loss)
+            st.success(f"📊 **Suggested Units/Lots:** {shares_qty:,.2f}")
+            st.info(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
+            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
+
+    st.markdown("---")
+    st.markdown("🎛️ **Chart Indicator Controls:**")
+    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
+    show_ema20 = col_t1.checkbox("EMA 20", value=True)
+    show_ema50 = col_t2.checkbox("EMA 50", value=True)
+    show_upper_bb = col_t3.checkbox("Upper BB", value=True)
+    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
+
+    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
+    
+    if show_ema20:
+        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
+    if show_ema50:
+        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
+    if show_upper_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
+    if show_lower_bb:
+        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
         
+    fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    st.plotly_chart(fig, use_container_width=True)
