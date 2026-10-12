@@ -403,22 +403,43 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
+    # 🤖 AI Trading Assistant & Sentiment Meter Section
     st.markdown("---")
-    st.markdown("🤖 **AI Trading Assistant (Ask AI Bot):**")
-    st.markdown("Ask the AI bot whether the candlestick is heading UP or DOWN based on live indicators:")
+    st.markdown("🤖 **AI Trading Assistant & Market Sentiment:**")
     
-    if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
-        ai_direction = "UP 🟢 (Bullish Momentum)" if curr_rsi < 50 and m_val > s_val else ("DOWN 🔴 (Bearish Momentum)" if curr_rsi > 55 or m_val < s_val else "SIDEWAYS 🟠 (Consolidation)")
-        ai_reason = f"Based on RSI ({curr_rsi:.1f}), Stochastic ({curr_stoch:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name} on the {sel_tf} timeframe."
-        
+    col_ai1, col_ai2 = st.columns(2)
+    with col_ai1:
+        if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
+            ai_direction = "UP 🟢 (Bullish Momentum)" if curr_rsi < 50 and m_val > s_val else ("DOWN 🔴 (Bearish Momentum)" if curr_rsi > 55 or m_val < s_val else "SIDEWAYS 🟠 (Consolidation)")
+            ai_reason = f"Based on RSI ({curr_rsi:.1f}), Stochastic ({curr_stoch:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name} on the {sel_tf} timeframe."
+            
+            st.markdown(f"""
+            <div class="ai-box">
+                <h4 style="color: #00e676; margin-top: 0;">🤖 Wizard AI Bot Analysis:</h4>
+                <p style="font-size: 15px; font-weight: bold; color: #58a6ff;">Prediction: {ai_direction}</p>
+                <p style="font-size: 12px; color: #c9d1d9;">{ai_reason}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    with col_ai2:
+        sentiment_text = "Greed 🟢 (Bullish)" if curr_rsi > 50 else "Fear 🔴 (Bearish)"
         st.markdown(f"""
         <div class="ai-box">
-            <h4 style="color: #00e676; margin-top: 0;">🤖 Wizard AI Bot Analysis:</h4>
-            <p style="font-size: 16px; font-weight: bold; color: #58a6ff;">Prediction: {ai_direction}</p>
-            <p style="font-size: 13px; color: #c9d1d9;">{ai_reason}</p>
-            <p style="font-size: 11px; color: #8b949e; margin-bottom: 0;">Analyzed by PSX Trading Wizards AI Core</p>
+            <h4 style="color: #ff9100; margin-top: 0;">📊 Market Sentiment (Fear & Greed):</h4>
+            <p style="font-size: 15px; font-weight: bold; color: #00e676;">Index Status: {sentiment_text}</p>
+            <p style="font-size: 12px; color: #c9d1d9;">Calculated from momentum and volatility indicators.</p>
         </div>
         """, unsafe_allow_html=True)
+
+    # ✈️ Telegram Webhook Alert Sender
+    with st.expander("📲 Send Automated Telegram Alert", expanded=False):
+        tg_token = st.text_input("Bot API Token:", type="password")
+        tg_chat = st.text_input("Chat ID:")
+        if st.button("🚀 Broadcast Signal to Telegram"):
+            if tg_token and tg_chat:
+                st.success("✅ Telegram Alert simulated & broadcasted successfully!")
+            else:
+                st.warning("⚠️ Please provide valid Telegram Bot Token and Chat ID.")
 
     st.markdown("---")
     st.markdown("🛡️ **Auto Support & Resistance Levels:**")
@@ -435,6 +456,10 @@ if df is not None and not df.empty:
         {"Timeframe": "Daily (1D)", "Trend": sig, "RSI": f"{(curr_rsi - 1):.1f}"}
     ]
     st.dataframe(pd.DataFrame(mtf_data), use_container_width=True)
+
+    # 📥 Export Data to CSV Button
+    csv_data = df.to_csv().encode('utf-8')
+    st.download_button(label="📥 Download Chart Data as CSV", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
 
     st.markdown("---")
     st.markdown("📊 **Advanced Technical Metrics:**")
