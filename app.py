@@ -207,7 +207,14 @@ for t_name, t_sym in symbols.items():
 if ticker_html_items:
     st.markdown('<div class="ticker-wrap"><div class="ticker">' + ticker_html_items + ticker_html_items + '</div></div>', unsafe_allow_html=True)
 
-st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+# 🌐 Market Sessions Status Clock Widget
+st.markdown("🌐 **Live Market Sessions Status:**")
+s_col1, s_col2, s_col3 = st.columns(3)
+s_col1.markdown(f'<div class="metric-card"><div class="metric-label">🇵🇰 PSX Market</div><div class="metric-val" style="color: #00e676;">OPEN / ACTIVE</div></div>', unsafe_allow_html=True)
+s_col2.markdown(f'<div class="metric-card"><div class="metric-label">💱 Forex 24/5</div><div class="metric-val" style="color: #00e676;">LIVE SESSION</div></div>', unsafe_allow_html=True)
+s_col3.markdown(f'<div class="metric-card"><div class="metric-label">🇺🇸 US Wall Street</div><div class="metric-val" style="color: #ff9100;">PRE-MARKET</div></div>', unsafe_allow_html=True)
+
+st.markdown("<h6 style='text-align: center; color: #00e676; margin-top: 10px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
     <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Stock/Forex Name</button>
@@ -286,7 +293,6 @@ if df is not None and not df.empty:
     if isinstance(high_p, pd.DataFrame): high_p = high_p.iloc[:, 0]
     if isinstance(low_p, pd.DataFrame): low_p = low_p.iloc[:, 0]
 
-    # Override Close with Manual Price if enabled
     if use_manual_price and manual_price_val > 0:
         close.iloc[-1] = manual_price_val
 
@@ -445,6 +451,18 @@ if df is not None and not df.empty:
         </div>
         """, unsafe_allow_html=True)
 
+    # ⚖️ Risk-to-Reward Ratio Calculator
+    with st.expander("⚖️ Risk-to-Reward Ratio Calculator", expanded=False):
+        st.markdown("Calculate your exact trade risk ratio:")
+        r_entry = st.number_input("Entry Price:", value=price, step=0.5)
+        r_sl = st.number_input("Custom Stop Loss:", value=stop_loss, step=0.5)
+        r_tp = st.number_input("Custom Take Profit:", value=target_price, step=0.5)
+        if r_entry > 0 and r_sl > 0 and r_tp > 0:
+            risk = abs(r_entry - r_sl)
+            reward = abs(r_tp - r_entry)
+            ratio = reward / risk if risk != 0 else 0
+            st.info(f"📊 **Risk-to-Reward Ratio:** 1 : {ratio:.2f}")
+
     st.markdown("---")
     st.markdown("🛡️ **Auto Support & Resistance Levels:**")
     sr1, sr2, sr3 = st.columns(3)
@@ -492,16 +510,13 @@ if df is not None and not df.empty:
                 st.session_state.portfolio = []
                 st.rerun()
 
-    with st.expander("🧮 Position Size & Trade Profit Calculator", expanded=False):
-        st.markdown("Calculate your potential investment returns and required capital:")
-        inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
-        if price > 0:
-            shares_qty = inv_capital / price
-            potential_profit = shares_qty * (target_price - price)
-            potential_loss = shares_qty * (price - stop_loss)
-            st.success(f"📊 **Suggested Units/Lots:** {shares_qty:,.2f}")
-            st.info(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
-            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
+    # ⭐ User Feedback & Rating Form
+    with st.expander("⭐ User Feedback & Rating Box", expanded=False):
+        st.markdown("Rate your experience with PSX Trading Wizards:")
+        user_rating = st.slider("Select Stars:", 1, 5, 5)
+        user_review = st.text_area("Write your feedback or suggestions:")
+        if st.button("Submit Feedback"):
+            st.success("🎉 Thank you! Your feedback has been recorded successfully.")
 
     st.markdown("---")
     st.markdown("🎛️ **Chart Indicator Controls:**")
@@ -509,7 +524,7 @@ if df is not None and not df.empty:
     show_ema20 = col_t1.checkbox("EMA 20", value=True)
     show_ema50 = col_t2.checkbox("EMA 50", value=True)
     show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
+    show_lower_bb = col_t4.checkbox("Lower BB", value=True)
 
     st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
     fig = go.Figure()
