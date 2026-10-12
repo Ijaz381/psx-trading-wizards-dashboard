@@ -10,38 +10,6 @@ from datetime import datetime
 st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="centered")
 
 st.markdown("""
-    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
-    components.html(f"""
-    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
-        <button id="speakBtn" style="
-            background: linear-gradient(135deg, #00e676, #00b0ff);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 13px;
-            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        ">
-            🔊 Listen Signal
-        </button>
-    </div>
-    <script>
-    document.getElementById("speakBtn").addEventListener("click", function() {{
-        if ('speechSynthesis' in window) {{
-            window.speechSynthesis.cancel();
-            var msg = new SpeechSynthesisUtterance("{signal_speech_text}");
-            msg.rate = 0.95;
-            window.speechSynthesis.speak(msg);
-        }}
-    }});
-    </script>
-    """, height=45)
-    
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&family=Orbitron:wght@600;700;900&display=swap');
 .stApp { background-color: #0d1117; color: #ffffff; }
@@ -180,6 +148,7 @@ for t_name, t_sym in symbols.items():
 
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
+
 st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
@@ -314,6 +283,38 @@ if df is not None and not df.empty:
         <div class="signal-title" style="color: {col};">{sig}</div>
     </div>
     ''', unsafe_allow_html=True)
+
+    signal_speech_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.2f}."
+    components.html(f"""
+    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
+        <button id="speakBtn" style="
+            background: linear-gradient(135deg, #00e676, #00b0ff);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        ">
+            🔊 Listen Signal
+        </button>
+    </div>
+    <script>
+    document.getElementById("speakBtn").addEventListener("click", function() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var msg = new SpeechSynthesisUtterance("{signal_speech_text}");
+            msg.rate = 0.95;
+            window.speechSynthesis.speak(msg);
+        }}
+    }});
+    </script>
+    """, height=45)
 
     share_msg = urllib.parse.quote(f"🚨 PSX Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.2f}\nTarget: {cur_sym}{target_price:,.2f}\nStop Loss: {cur_sym}{stop_loss:,.2f}\n\nAnalyzed by Ijaz Sardar")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
