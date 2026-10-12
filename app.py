@@ -20,72 +20,72 @@ st.set_page_config(page_title="PSX Trading Wizards", page_icon="📈", layout="c
 css_code = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@600;700;900&family=Orbitron:wght@600;700;900&display=swap');
-.stApp {{ background-color: """ + theme_bg + """; color: """ + theme_fg + """; }}
-#MainMenu, footer, header {{visibility: hidden !important; display: none !important;}}
+.stApp { background-color: """ + theme_bg + """; color: """ + theme_fg + """; }
+#MainMenu, footer, header {visibility: hidden !important; display: none !important;}
 
-.ticker-wrap {{
+.ticker-wrap {
     width: 100%; overflow: hidden; background: """ + card_bg + """;
     border-bottom: 1px solid """ + border_col + """; border-top: 1px solid """ + border_col + """;
     padding: 8px 0; white-space: nowrap; box-sizing: border-box; margin: 10px 0 15px 0;
-}}
-.ticker {{ display: inline-block; white-space: nowrap; animation: ticker 35s linear infinite; }}
-.ticker-item {{ display: inline-block; padding: 0 25px; font-size: 13px; font-weight: 700; font-family: 'Poppins', sans-serif; }}
-@keyframes ticker {{ 0% {{ transform: translate3d(0, 0, 0); }} 100% {{ transform: translate3d(-50%, 0, 0); }} }}
+}
+.ticker { display: inline-block; white-space: nowrap; animation: ticker 35s linear infinite; }
+.ticker-item { display: inline-block; padding: 0 25px; font-size: 13px; font-weight: 700; font-family: 'Poppins', sans-serif; }
+@keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-.news-banner {{
+.news-banner {
     background: linear-gradient(90deg, #ff9100, #ff3d00); color: #fff; padding: 8px 12px;
     border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 12px;
     box-shadow: 0 0 15px rgba(255, 145, 0, 0.4);
 }
 
-.logo-header-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 5px; margin-bottom: 10px; }}
-.logo-img {{ width: 120px; height: 120px; border-radius: 50%; border: 3px solid #00e676; box-shadow: 0 0 25px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover; }}
-.animated-title {{ font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 900; text-transform: uppercase; background: linear-gradient(90deg, #00e676, #58a6ff, #00e676); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1.5px; }}
-.animated-author {{ font-family: 'Great Vibes', cursive; font-size: 30px; color: #58a6ff; margin-top: -2px; }}
+.logo-header-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 15px; margin-bottom: 10px; }
+.logo-img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #00e676; box-shadow: 0 0 25px rgba(0, 230, 118, 0.6); margin-bottom: 6px; object-fit: cover; }
+.animated-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 900; text-transform: uppercase; background: linear-gradient(90deg, #00e676, #58a6ff, #00e676); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1.5px; }
+.animated-author { font-family: 'Great Vibes', cursive; font-size: 30px; color: #58a6ff; margin-top: -2px; }
 
-.header-info-strip {{ display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }}
-.header-badge {{ background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }}
-.header-phone {{ background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }}
+.header-info-strip { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+.header-badge { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #00e676; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; }
+.header-phone { background: """ + card_bg + """; border: 1px solid """ + border_col + """; padding: 5px 12px; border-radius: 20px; color: #58a6ff; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }
 
-.pulse-container {{ display: flex; justify-content: space-around; align-items: center; background: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 5px; margin: 10px 0; }}
-.pulse-item {{ text-align: center; flex: 1; }}
-.pulse-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase; }}
-.pulse-val {{ font-size: 18px; font-weight: 900; margin-top: 2px; }}
+.pulse-container { display: flex; justify-content: space-around; align-items: center; background: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 5px; margin: 10px 0; }
+.pulse-item { text-align: center; flex: 1; }
+.pulse-label { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.pulse-val { font-size: 18px; font-weight: 900; margin-top: 2px; }
 
-.circle-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }}
-.glow-circle-wrapper {{ position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }}
-.glow-circle-ring {{ position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px dashed var(--signal-color, #ff9100); animation: rotateRing 8s linear infinite; }}
-@keyframes rotateRing {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+.circle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0; }
+.glow-circle-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }
+.glow-circle-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px dashed var(--signal-color, #ff9100); animation: rotateRing 8s linear infinite; }
+@keyframes rotateRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.glow-circle {{ 
+.glow-circle { 
     width: 105px; height: 105px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
     background: radial-gradient(circle, """ + card_bg + """ 0%, """ + theme_bg + """ 100%); 
     box-shadow: 0 0 30px var(--glow-color, rgba(255, 145, 0, 0.5)); border: 3px solid var(--signal-color, #ff9100);
     animation: pulseGlow 1.8s ease-in-out infinite alternate; z-index: 2;
-}}
-@keyframes pulseGlow {{ 0% {{ transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); }} 100% {{ transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); }} }}
+}
+@keyframes pulseGlow { 0% { transform: scale(0.95); box-shadow: 0 0 15px var(--glow-color, rgba(255, 145, 0, 0.4)); } 100% { transform: scale(1.06); box-shadow: 0 0 40px var(--glow-color, rgba(255, 145, 0, 0.95)); } }
 
-.candle-box {{ display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; }}
-.candle {{ position: relative; width: 10px; border-radius: 2px; animation: candleBounce 1.5s ease-in-out infinite alternate; }}
-.candle::before {{ content: ''; position: absolute; top: -8px; left: 4px; width: 2px; height: 26px; background-color: currentColor; z-index: -1; }}
-.candle-green {{ background-color: #00e676; color: #00e676; box-shadow: 0 0 12px #00e676; }}
-.candle-red {{ background-color: #ff1744; color: #ff1744; box-shadow: 0 0 12px #ff1744; }}
-.candle-1 {{ height: 22px; animation-delay: 0s; }}
-.candle-2 {{ height: 35px; animation-delay: 0.3s; }}
-.candle-3 {{ height: 28px; animation-delay: 0.6s; }}
-@keyframes candleBounce {{ 0% {{ transform: translateY(0) scaleY(0.9); }} 100% {{ transform: translateY(-4px) scaleY(1.1); }} }}
+.candle-box { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; }
+.candle { position: relative; width: 10px; border-radius: 2px; animation: candleBounce 1.5s ease-in-out infinite alternate; }
+.candle::before { content: ''; position: absolute; top: -8px; left: 4px; width: 2px; height: 26px; background-color: currentColor; z-index: -1; }
+.candle-green { background-color: #00e676; color: #00e676; box-shadow: 0 0 12px #00e676; }
+.candle-red { background-color: #ff1744; color: #ff1744; box-shadow: 0 0 12px #ff1744; }
+.candle-1 { height: 22px; animation-delay: 0s; }
+.candle-2 { height: 35px; animation-delay: 0.3s; }
+.candle-3 { height: 28px; animation-delay: 0.6s; }
+@keyframes candleBounce { 0% { transform: translateY(0) scaleY(0.9); } 100% { transform: translateY(-4px) scaleY(1.1); } }
 
-.signal-title {{ font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 5px; }}
+.signal-title { font-size: 24px; font-weight: 900; text-align: center; letter-spacing: 1.5px; margin-top: 10px; margin-bottom: 5px; }
 
-.metric-card {{ background-color: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; }}
-.metric-label {{ color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }}
-.metric-val {{ color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }}
-.metric-sub {{ font-size: 11px; font-weight: 700; margin-top: 3px; }}
+.metric-card { background-color: """ + card_bg + """; border: 1px solid """ + border_col + """; border-radius: 12px; padding: 10px 6px; text-align: center; margin-bottom: 8px; }
+.metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+.metric-val { color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }
+.metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
 
-.share-container {{ display: flex; gap: 10px; justify-content: center; margin: 12px 0; }}
-.share-btn {{ display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }}
-.btn-wa {{ background: #25D366; }}
-.btn-tg {{ background: #0088cc; }}
+.share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
+.share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }
+.btn-wa { background: #25D366; }
+.btn-tg { background: #0088cc; }
 </style>
 """
 st.markdown(css_code, unsafe_allow_html=True)
@@ -407,32 +407,4 @@ if df is not None and not df.empty:
         inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
         if price > 0:
             shares_qty = inv_capital / price
-            potential_profit = shares_qty * (target_price - price)
-            potential_loss = shares_qty * (price - stop_loss)
-            st.success(f"📊 **Suggested Units/Lots:** {shares_qty:,.2f}")
-            st.info(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
-            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
-
-    st.markdown("---")
-    st.markdown("🎛️ **Chart Indicator Controls:**")
-    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
-    show_ema20 = col_t1.checkbox("EMA 20", value=True)
-    show_ema50 = col_t2.checkbox("EMA 50", value=True)
-    show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_lower_bb = col_t4.checkbox("Upper BB Lower", value=True)
-
-    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
-    
-    if show_ema20:
-        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
-    if show_ema50:
-        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
-    if show_upper_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    if show_lower_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_lower, mode='lines', name='Lower BB', line=dict(color='#ff9100', width=1, dash='dash')))
-        
-    fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    st.plotly_chart(fig, use_container_width=True)
+            potential_profit
