@@ -187,6 +187,26 @@ for t_name, t_sym in symbols.items():
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
 
+# 🎙️ Voice Assistant Component
+st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice AI Assistant (Speak to Analyze Any Asset)</h6>" if not is_urdu else "<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ وائس اے آئی اسسٹنٹ (بول کر تجزیہ کروانا)</h6>", unsafe_allow_html=True)
+components.html("""
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-family: sans-serif;">
+    <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">🎙️ Ask AI: 'Should I Buy or Sell HBL?'</button>
+    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 600;">Click mic & ask for buy/sell advice</div>
+</div>
+<script>
+const micBtn = document.getElementById("micBtn");
+const statusText = document.getElementById("statusText");
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    micBtn.addEventListener("click", () => { recognition.start(); statusText.innerText = "Listening... Speak now!"; });
+    recognition.onresult = (event) => { statusText.innerText = "You asked: " + event.results[0][0].transcript; };
+}
+</script>
+""", height=75)
+
 search_label = "🔍 Type to Search Stock / Forex / Global Assets:" if not is_urdu else "🔍 اسٹاک یا فاریکس تلاش کرنے کے لیے لکھیں:"
 asset_label = "Select Market / Asset" if not is_urdu else "مارکیٹ یا اثاثہ منتخب کریں"
 tf_label = "Select Timeframe" if not is_urdu else "ٹائم فریم منتخب کریں"
@@ -320,15 +340,19 @@ if df is not None and not df.empty:
     if curr_rsi < 45 and is_bullish_st:
         sig, col, icon, glow = ("STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("مضبوط خریداری (STRONG BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.5 * atr_val), price + (2.5 * atr_val)
+        recommendation = "BUY"
     elif is_bullish_st:
         sig, col, icon, glow = ("BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("خریداری (BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.2 * atr_val), price + (2.0 * atr_val)
+        recommendation = "BUY"
     elif not is_bullish_st:
         sig, col, icon, glow = ("STRONG SELL", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)") if not is_urdu else ("مضبوط فروخت (STRONG SELL)", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)")
         stop_loss, target_price = price + (1.5 * atr_val), price - (2.5 * atr_val)
+        recommendation = "SELL"
     else:
         sig, col, icon, glow = ("HOLD / NEUTRAL", "#ff9100", neut_c, "rgba(255, 145, 0, 0.8)") if not is_urdu else ("ہولڈ / غیر جانبدار", "#ff9100", neut_c, "rgba(255, 145, 0, 0.8)")
         stop_loss, target_price = price - (1.0 * atr_val), price + (1.0 * atr_val)
+        recommendation = "HOLD"
 
     st.markdown(f'''
     <div class="glow-circle-wrapper" style="margin: 0 auto;">
@@ -338,57 +362,37 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
-    # Audio Signal
-    safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
-    speak_html = f"""
-    <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
-        <button onclick="playSignal()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 24px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);">🔊 {"Listen Signal Audio" if not is_urdu else "سگنل آڈیو سنیں"}</button>
-    </div>
-    <script>
-    function playSignal() {{
-        if ('speechSynthesis' in window) {{
-            window.speechSynthesis.cancel();
-            var utterance = new SpeechSynthesisUtterance("{safe_signal_text}");
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
-        }}
-    }}
-    </script>
-    """
-    components.html(speak_html, height=55)
-
     c1, c2, c3 = st.columns(3)
     chg_col = "#00e676" if price_change >= 0 else "#ff1744"
     c1.markdown(f'<div class="metric-card"><div class="metric-label">{"Price Used" if not is_urdu else "موجودہ قیمت"}</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 Speaking AI Assistant Section (RESTORED!)
+    # 🤖 Interactive AI Voice Assistant (Buy or Sell Advice)
     st.markdown("---")
-    ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
+    ai_heading = "🤖 Interactive Voice AI Assistant (Buy / Sell Recommendation)" if not is_urdu else "🤖 انٹرایکٹو وائس اے آئی اسسٹنٹ (خریدیں یا بیچیں کا مشورہ)"
     st.markdown(f"**{ai_heading}**")
     
-    ai_direction = "BULLISH 🟢 (Upward Momentum)" if is_bullish_st and curr_rsi < 60 else "BEARISH 🔴 (Downward Momentum)"
-    ai_speak_text = f"The AI Assistant predicts that the market candle for {sel_name} is heading {ai_direction}."
+    ai_speech_advice = f"AI Assistant analysis for {sel_name}. Market trend is currently {sig}. The recommended action is to {recommendation}. Current price is {cur_sym}{price:,.2f} with Stop Loss at {cur_sym}{stop_loss:,.2f}."
     
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
-        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION for {sel_name}</p>
-        <p style="font-size: 17px; font-weight: 900; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
+        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI RECOMMENDATION FOR {sel_name.upper()}</p>
+        <p style="font-size: 20px; font-weight: 900; color: {'#00e676' if recommendation=='BUY' else '#ff1744' if recommendation=='SELL' else '#ff9100'}; margin-bottom: 12px;">ACTION: {recommendation} ({sig})</p>
     </div>
     """, unsafe_allow_html=True)
 
     ai_btn_html = f"""
     <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-        <button onclick="speakAI()" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">
-            🗣️ {"Listen AI Voice" if not is_urdu else "اے آئی کی آواز سنیں"}
+        <button onclick="speakAIAdvice()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.6);">
+            🗣️ {"Listen AI Voice Advice (Buy or Sell?)" if not is_urdu else "اے آئی کی آواز میں مشورہ سنیں (خریدیں یا بیچیں؟)"}
         </button>
     </div>
     <script>
-    function speakAI() {{
+    function speakAIAdvice() {{
         if ('speechSynthesis' in window) {{
             window.speechSynthesis.cancel();
-            var utterance = new SpeechSynthesisUtterance("{ai_speak_text}");
+            var utterance = new SpeechSynthesisUtterance("{ai_speech_advice}");
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
         }}
@@ -406,30 +410,6 @@ if df is not None and not df.empty:
     m2.markdown(f'<div class="metric-card"><div class="metric-label">VWAP</div><div class="metric-val">{cur_sym}{curr_vwap:,.2f}</div></div>', unsafe_allow_html=True)
     m3.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
     m4.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
-
-    # Risk-to-Reward Calculator
-    with st.expander("⚖️ Risk-to-Reward & Profit Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ اور پرافٹ کیلکولیٹر", expanded=False):
-        inv_capital = st.number_input("Enter Investment Capital:", min_value=10.0, value=10000.0, step=1000.0)
-        r_entry = st.number_input("Entry Price:", value=price, step=0.5)
-        r_sl = st.number_input("Custom Stop Loss:", value=stop_loss, step=0.5)
-        r_tp = st.number_input("Custom Take Profit:", value=target_price, step=0.5)
-        if r_entry > 0 and r_sl > 0 and r_tp > 0:
-            risk = abs(r_entry - r_sl)
-            reward = abs(r_tp - r_entry)
-            ratio = reward / risk if risk != 0 else 0
-            shares_qty = inv_capital / r_entry
-            potential_profit = shares_qty * (r_tp - r_entry)
-            potential_loss = shares_qty * (r_entry - r_sl)
-            st.info(f"📊 **Risk-to-Reward Ratio:** 1 : {ratio:.2f}")
-            st.success(f"💰 **Estimated Take-Profit Gain:** {cur_sym}{potential_profit:,.2f}")
-            st.warning(f"⚠️ **Estimated Stop-Loss Risk:** {cur_sym}{potential_loss:,.2f}")
-
-    st.markdown("---")
-    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آٹو سپورٹ اور ریزسٹنس لیولز:**")
-    sr1, sr2, sr3 = st.columns(3)
-    sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
-    sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
-    sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
 
     # Chart Controls & Subplots
     st.markdown("---")
