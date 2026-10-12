@@ -13,6 +13,10 @@ if 'theme_mode' not in st.session_state:
 st.sidebar.title("⚙️ Terminal Settings")
 st.session_state.theme_mode = st.sidebar.selectbox("Choose Theme:", ["Dark Mode 🌙", "Light Mode ☀️"], index=0 if "Dark" in st.session_state.theme_mode else 1)
 
+# Language Selector (English / Urdu)
+lang_choice = st.sidebar.selectbox("Select Language / زبان منتخب کریں:", ["English", "Urdu (اردو)"])
+is_urdu = "Urdu" in lang_choice
+
 is_dark = True if "Dark" in st.session_state.theme_mode else False
 
 theme_bg = "#0d1117" if is_dark else "#ffffff"
@@ -96,13 +100,6 @@ css_code = """
 .metric-label { color: #8b949e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
 .metric-val { color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }
 .metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
-
-.ai-box { background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); color: #ffffff; }
-
-.share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
-.share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }
-.btn-wa { background: #25D366; }
-.btn-tg { background: #0088cc; }
 </style>
 """
 st.markdown(css_code, unsafe_allow_html=True)
@@ -137,33 +134,25 @@ symbols = {
 }
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("⭐ **Custom Watchlist Manager**")
+st.sidebar.markdown("⭐ **Watchlist Manager**" if not is_urdu else "⭐ **واچ لسٹ مینیجر**")
 if 'watchlist' not in st.session_state:
     st.session_state.watchlist = ["KSE-100 Index", "EUR/USD (Forex)", "Crude Oil (CL=F)", "HBL (Habib Bank Limited)"]
 
-selected_to_add = st.sidebar.selectbox("Add to Watchlist:", [k for k in symbols.keys() if k not in st.session_state.watchlist])
-if st.sidebar.button("Add Symbol"):
+selected_to_add = st.sidebar.selectbox("Add to Watchlist:" if not is_urdu else "واچ لسٹ میں شامل کریں:", [k for k in symbols.keys() if k not in st.session_state.watchlist])
+if st.sidebar.button("Add Symbol" if not is_urdu else "شامل کریں"):
     if selected_to_add not in st.session_state.watchlist:
         st.session_state.watchlist.append(selected_to_add)
         st.rerun()
 
-st.sidebar.markdown("📌 **Your Watchlist Items:**")
-for w_item in st.session_state.watchlist:
-    col_w1, col_w2 = st.sidebar.columns([3, 1])
-    col_w1.write(w_item)
-    if col_w2.button("❌", key=f"del_{w_item}"):
-        st.session_state.watchlist.remove(w_item)
-        st.rerun()
-
 logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
 
-header_html = """
+header_html = f"""
 <div class="logo-header-container">
-    <img src=\"""" + logo_url + """" class="logo-img" alt="PSX Logo">
-    <div class="animated-title">PSX Trading Wizards</div>
-    <div class="animated-author">By Ijaz Sardar</div>
+    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
+    <div class="animated-title">{"PSX Trading Wizards" if not is_urdu else "پی ایس ایکس ٹریڈنگ وزرڈز"}</div>
+    <div class="animated-author">{"By Ijaz Sardar" if not is_urdu else "از اعجاز سردار"}</div>
     <div class="header-info-strip">
-        <div class="header-badge" id="pktClock">🕒 Loading Pakistan Time...</div>
+        <div class="header-badge" id="pktClock">🕒 Loading...</div>
         <a href="tel:+923007581169" class="header-phone">📞 +92 300 7581169</a>
     </div>
 </div>
@@ -183,7 +172,8 @@ setInterval(updateClock, 1000);
 </script>
 """, height=0)
 
-st.markdown('<div class="news-banner"><div>🔥 <b>LIVE NEWS FEED:</b> US CPI Data Released & Central Bank Rate Decisions Active. High Volatility Expected in Gold, Oil & Forex! Managed by Ijaz Sardar (+92 300 7581169)</div></div>', unsafe_allow_html=True)
+news_text = "🔥 LIVE NEWS: US CPI Data Released & Central Bank Rate Decisions Active. High Volatility Expected!" if not is_urdu else "🔥 لائیو خبریں: امریکی سی پی آئی ڈیٹا جاری اور مرکزی بینک کے فیصلے متوقع۔ زبردست اتار چڑھاؤ متوقع!"
+st.markdown(f'<div class="news-banner"><div>{news_text}</div></div>', unsafe_allow_html=True)
 ticker_list = ["^KS100", "EURUSD=X", "GBPUSD=X", "CL=F", "GC=F", "BTC-USD", "HBL.KA", "MCB.KA", "UBL.KA", "OGDC.KA"]
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
@@ -200,18 +190,20 @@ for t_name, t_sym in symbols.items():
                 col = "#00e676" if chg >= 0 else "#ff1744"
                 sign = "+" if chg >= 0 else ""
                 short_name = t_name.split("(")[0].strip()
-                ticker_html_items += '<div class="ticker-item">' + short_name + ': <span style="color: ' + col + ';">' + f"{cp:,.4f}" + ' (' + sign + f"{pct:.2f}" + '%)</span></div>'
+                ticker_html_items += f'<div class="ticker-item">{short_name}: <span style="color: {col};">{cp:,.4f} ({sign}{pct:.2f}%)</span></div>'
         except Exception:
             pass
 
 if ticker_html_items:
-    st.markdown('<div class="ticker-wrap"><div class="ticker">' + ticker_html_items + ticker_html_items + '</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
 
-st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
+voice_title = "🎙️ Voice Search & Filter Share" if not is_urdu else "🎙️ آواز سے سرچ کریں اور شیئر فلٹر کریں"
+st.markdown(f"<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>{voice_title}</h6>", unsafe_allow_html=True)
+
 components.html("""
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-    <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Stock/Forex Name</button>
-    <div id="statusText" style="color: #58a6ff; font-size: 11px; font-weight: 500;">Click mic & speak name (e.g. 'Euro USD', 'Crude Oil', 'HBL')</div>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-family: sans-serif;">
+    <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 13px; box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);">🎙️ Speak Asset Name</button>
+    <div id="statusText" style="color: #58a6ff; font-size: 11px; font-weight: 500;">Click mic & speak name</div>
 </div>
 <script>
 const micBtn = document.getElementById("micBtn");
@@ -220,22 +212,26 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    micBtn.addEventListener("click", () => { recognition.start(); statusText.innerText = "Listening... Speak now!"; });
+    micBtn.addEventListener("click", () => { recognition.start(); statusText.innerText = "Listening..."; });
     recognition.onresult = (event) => { statusText.innerText = "You said: " + event.results[0][0].transcript.toLowerCase(); };
 }
 </script>
-""", height=75)
+""", height=65)
 
-use_watchlist = st.checkbox("⭐ Quick Load from My Watchlist", value=False)
+search_label = "🔍 Type to Search Stock / Forex / Global Assets:" if not is_urdu else "🔍 اسٹاک یا فاریکس تلاش کرنے کے لیے لکھیں:"
+asset_label = "Select Market / Asset" if not is_urdu else "مارکیٹ یا اثاثہ منتخب کریں"
+tf_label = "Select Timeframe" if not is_urdu else "ٹائم فریم منتخب کریں"
+
+use_watchlist = st.checkbox("⭐ Quick Load from My Watchlist" if not is_urdu else "⭐ واچ لسٹ سے فوری لوڈ کریں", value=False)
 if use_watchlist and st.session_state.watchlist:
-    sel_name = st.selectbox("Select Asset from Watchlist", st.session_state.watchlist)
+    sel_name = st.selectbox(asset_label, st.session_state.watchlist)
 else:
-    search_query = st.text_input("🔍 Type to Search Stock / Forex / Global Assets:", "")
+    search_query = st.text_input(search_label, "")
     filtered_symbols = {k: v for k, v in symbols.items() if search_query.lower() in k.lower()} if search_query else symbols
     if not filtered_symbols: filtered_symbols = symbols
-    sel_name = st.selectbox("Select Market / Asset", list(filtered_symbols.keys()))
+    sel_name = st.selectbox(asset_label, list(filtered_symbols.keys()))
 
-sel_tf = st.selectbox("Select Timeframe", ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
+sel_tf = st.selectbox(tf_label, ["1 Minute", "5 Minutes", "15 Minutes", "1 Hour", "4 Hours", "Daily (1D)", "Weekly (1W)"])
 
 ticker = symbols[sel_name]
 tf_map = {
@@ -245,12 +241,14 @@ tf_map = {
 period, interval = tf_map[sel_tf]
 
 st.markdown("---")
-use_manual_price = st.checkbox("✍️ Enter Custom / Manual Price for Analysis", value=False)
+manual_label = "✍️ Enter Custom / Manual Price for Analysis" if not is_urdu else "✍️ تجزیے کے لیے اپنی مرضی کی قیمت درج کریں"
+use_manual_price = st.checkbox(manual_label, value=False)
 manual_price_val = 0.0
 if use_manual_price:
-    manual_price_val = st.number_input("Enter Share/Asset Price Manually:", min_value=0.001, value=150.0, step=0.5)
+    manual_price_val = st.number_input("Enter Price:" if not is_urdu else "قیمت درج کریں:", min_value=0.001, value=150.0, step=0.5)
 
-st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
+analyzing_text = f"Analyzing: {sel_name} ({sel_tf})" if not is_urdu else f"تجزیہ جاری ہے: {sel_name} ({sel_tf})"
+st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>{analyzing_text}</h6>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=1)
 def load_data(sym, p, i):
@@ -357,8 +355,6 @@ if df is not None and not df.empty:
 
     m_val = float(macd.iloc[-1]) if not macd.empty and not pd.isna(macd.iloc[-1]) else 0.0
     s_val = float(sig_line.iloc[-1]) if not sig_line.empty and not pd.isna(sig_line.iloc[-1]) else 0.0
-    b_upper = float(bb_upper.iloc[-1]) if not bb_upper.empty and not pd.isna(bb_upper.iloc[-1]) else price * 1.05
-    b_lower = float(bb_lower.iloc[-1]) if not bb_lower.empty and not pd.isna(bb_lower.iloc[-1]) else price * 0.95
     atr_val = float((high_p - low_p).rolling(14).mean().iloc[-1]) if len(high_p) >= 14 else price * 0.02
     if pd.isna(atr_val) or atr_val <= 0: atr_val = price * 0.02
 
@@ -371,52 +367,30 @@ if df is not None and not df.empty:
     neut_c = '<div class="candle-box"><div class="candle candle-green candle-1"></div><div class="candle candle-red candle-2"></div><div class="candle candle-green candle-3"></div></div>'
 
     if curr_rsi < 40 and price > curr_sar and m_val > s_val:
-        sig, col, icon, glow = "STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)"
+        sig, col, icon, glow = ("STRONG BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("مضبوط خریداری (STRONG BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.5 * atr_val), price + (2.5 * atr_val)
     elif curr_rsi < 48 and price > curr_sar:
-        sig, col, icon, glow = "BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)"
+        sig, col, icon, glow = ("BUY", "#00e676", green_c, "rgba(0, 230, 118, 0.85)") if not is_urdu else ("خریداری (BUY)", "#00e676", green_c, "rgba(0, 230, 118, 0.85)")
         stop_loss, target_price = price - (1.2 * atr_val), price + (2.0 * atr_val)
     elif curr_rsi > 60 and price < curr_sar and m_val < s_val:
-        sig, col, icon, glow = "STRONG SELL", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)"
+        sig, col, icon, glow = ("STRONG SELL", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)") if not is_urdu else ("مضبوط فروخت (STRONG SELL)", "#ff1744", red_c, "rgba(255, 23, 68, 0.85)")
         stop_loss, target_price = price + (1.5 * atr_val), price - (2.5 * atr_val)
     else:
-        sig, col, icon, glow = "HOLD / NEUTRAL", "#ff9100", neut_c, "rgba(255, 145, 0, 0.8)"
+        sig, col, icon, glow = ("HOLD / NEUTRAL", "#ff9100", neut_c, "rgba(255, 145, 0, 0.8)") if not is_urdu else ("ہولڈ / غیر جانبدار", "#ff9100", neut_c, "rgba(255, 145, 0, 0.8)")
         stop_loss, target_price = price - (1.0 * atr_val), price + (1.0 * atr_val)
 
     st.markdown(f'''
-    <div class="pulse-container">
-        <div class="pulse-item"><div class="pulse-label" style="color: #00e676;">🟢 Bullish</div><div class="pulse-val" style="color: #00e676;">24</div></div>
-        <div class="pulse-item" style="border-left: 1px solid {border_col}; border-right: 1px solid {border_col};"><div class="pulse-label" style="color: #ff1744;">🔴 Bearish</div><div class="pulse-val" style="color: #ff1744;">14</div></div>
-        <div class="pulse-item"><div class="pulse-label" style="color: #ff9100;">🟠 Neutral</div><div class="pulse-val" style="color: #ff9100;">5</div></div>
+    <div class="glow-circle-wrapper" style="margin: 0 auto;">
+        <div class="glow-circle-ring" style="--signal-color: {col};"></div>
+        <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow};">{icon}</div>
     </div>
+    <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
-    st.markdown(f'''
-    <div class="circle-container">
-        <div class="glow-circle-wrapper">
-            <div class="glow-circle-ring" style="--signal-color: {col};"></div>
-            <div class="glow-circle" style="--signal-color: {col}; --glow-color: {glow};">{icon}</div>
-        </div>
-        <div class="signal-title" style="color: {col};">{sig}</div>
-    </div>
-    ''', unsafe_allow_html=True)
-
-    safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
+    safe_signal_text = f"Trading signal is {sig}. Current price is {cur_sym}{price:,.4f}"
     speak_html = f"""
-    <div style="display: flex; justify-content: center; align-items: center; font-family: sans-serif; margin: 10px 0;">
-        <button onclick="playSignal()" style="
-            background: linear-gradient(135deg, #00e676, #00b0ff);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
-        ">
-            🔊 Listen Signal Audio
-        </button>
+    <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
+        <button onclick="playSignal()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 24px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);">🔊 {"Listen Signal Audio" if not is_urdu else "سگنل آڈیو سنیں"}</button>
     </div>
     <script>
     function playSignal() {{
@@ -425,54 +399,48 @@ if df is not None and not df.empty:
             var utterance = new SpeechSynthesisUtterance("{safe_signal_text}");
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
-        }} else {{
-            alert('Speech synthesis not supported in this browser.');
         }}
     }}
     </script>
     """
     components.html(speak_html, height=55)
 
-    share_msg = urllib.parse.quote(f"🚨 PSX & Global Trading Wizards Signal 🚨\n\nAsset: {sel_name}\nSignal: {sig}\nLive Price: {cur_sym}{price:,.4f}\nTarget: {cur_sym}{target_price:,.4f}\nStop Loss: {cur_sym}{stop_loss:,.4f}\n\nAnalyzed by Ijaz Sardar")
+    share_msg = urllib.parse.quote(f"🚨 PSX & Global Trading Wizards Signal 🚨\nAsset: {sel_name}\nSignal: {sig}\nPrice: {cur_sym}{price:,.4f}\nTarget: {cur_sym}{target_price:,.4f}\nStop Loss: {cur_sym}{stop_loss:,.4f}")
     wa_url = f"https://api.whatsapp.com/send?text={share_msg}"
     tg_url = f"https://t.me/share/url?url=https://streamlit.app&text={share_msg}"
 
     st.markdown(f'''
-    <div class="share-container">
-        <a class="share-btn btn-wa" href="{wa_url}" target="_blank">📲 Share on WhatsApp</a>
-        <a class="share-btn btn-tg" href="{tg_url}" target="_blank">✈️ Share on Telegram</a>
+    <div style="display: flex; gap: 10px; justify-content: center; margin: 12px 0;">
+        <a style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; background: #25D366; text-decoration: none;">📲 WhatsApp</a>
+        <a style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; background: #0088cc; text-decoration: none;">✈️ Telegram</a>
     </div>
     ''', unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
     chg_col = "#00e676" if price_change >= 0 else "#ff1744"
-    c1.markdown(f'<div class="metric-card"><div class="metric-label">Price Used</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
+    c1.markdown(f'<div class="metric-card"><div class="metric-label">{"Price Used" if not is_urdu else "موجودہ قیمت"}</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 Speaking AI Assistant Section
+    # Clean Modern Native AI Assistant Section (Fixed Layout)
     st.markdown("---")
-    st.markdown("🤖 **Speaking AI Assistant (Bullish / Bearish Voice Predictor):**")
+    ai_heading = "🤖 Speaking AI Assistant (Bullish / Bearish Voice Predictor)" if not is_urdu else "🤖 بولنے والا اے آئی اسسٹنٹ (بلش / بیارش پیشگوئی)"
+    st.markdown(f"**{ai_heading}**")
     
-    ai_direction = "BULLISH 🟢 (Upward Candle Momentum)" if price > curr_sar and curr_rsi < 55 else "BEARISH 🔴 (Downward Candle Momentum)"
-    ai_speak_text = f"The AI Assistant predicts that the candle for {sel_name} is heading {ai_direction}."
+    ai_direction = "BULLISH 🟢 (Upward Momentum)" if price > curr_sar and curr_rsi < 55 else "BEARISH 🔴 (Downward Momentum)"
+    ai_speak_text = f"The AI Assistant predicts that the market for {sel_name} is heading {ai_direction}."
     
-    ai_voice_html = f"""
-    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 10px 0; text-align: center;">
-        <h4 style="color: #00e676; margin-top: 0; margin-bottom: 8px;">🤖 Speaking AI Assistant Prediction:</h4>
-        <p style="font-size: 16px; font-weight: bold; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
-        <button onclick="speakAI()" style="
-            background: linear-gradient(135deg, #ff9100, #ff3d00);
-            color: #fff;
-            font-weight: bold;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 0 15px rgba(255, 145, 0, 0.5);
-        ">
-            🗣️ Listen AI Voice (Bullish or Bearish?)
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
+        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI PREDICTION</p>
+        <p style="font-size: 17px; font-weight: 900; color: #58a6ff; margin-bottom: 12px;">{ai_direction}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    ai_btn_html = f"""
+    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+        <button onclick="speakAI()" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">
+            🗣️ {"Listen AI Voice" if not is_urdu else "اے آئی کی آواز سنیں"}
         </button>
     </div>
     <script>
@@ -482,100 +450,37 @@ if df is not None and not df.empty:
             var utterance = new SpeechSynthesisUtterance("{ai_speak_text}");
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
-        }} else {{
-            alert('Speech synthesis not supported in this browser.');
         }}
     }}
     </script>
     """
-    components.html(ai_voice_html, height=130)
+    components.html(ai_btn_html, height=60)
 
-    # ⚖️ Risk-to-Reward Ratio Calculator
-    with st.expander("⚖️ Risk-to-Reward Ratio Calculator", expanded=False):
-        st.markdown("Calculate your exact trade risk ratio:")
+    # Risk-to-Reward Calculator
+    with st.expander("⚖️ Risk-to-Reward Ratio Calculator" if not is_urdu else "⚖️ رسک ٹو ریوارڈ کیلکولیٹر", expanded=False):
         r_entry = st.number_input("Entry Price:", value=price, step=0.5)
-        r_sl = st.number_input("Custom Stop Loss:", value=stop_loss, step=0.5)
-        r_tp = st.number_input("Custom Take Profit:", value=target_price, step=0.5)
+        r_sl = st.number_input("Stop Loss:", value=stop_loss, step=0.5)
+        r_tp = st.number_input("Take Profit:", value=target_price, step=0.5)
         if r_entry > 0 and r_sl > 0 and r_tp > 0:
             risk = abs(r_entry - r_sl)
             reward = abs(r_tp - r_entry)
             ratio = reward / risk if risk != 0 else 0
-            st.info(f"📊 **Risk-to-Reward Ratio:** 1 : {ratio:.2f}")
+            st.info(f"📊 Risk-to-Reward Ratio: 1 : {ratio:.2f}")
 
     st.markdown("---")
-    st.markdown("🛡️ **Auto Support & Resistance Levels:**")
+    st.markdown("🛡️ **Auto Support & Resistance Levels:**" if not is_urdu else "🛡️ **آటో سپورٹ اور ریزسٹنس لیولز:**")
     sr1, sr2, sr3 = st.columns(3)
     sr1.markdown(f'<div class="metric-card"><div class="metric-label">Support (S1)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{support_1:,.4f}</div></div>', unsafe_allow_html=True)
     sr2.markdown(f'<div class="metric-card"><div class="metric-label">Pivot Point</div><div class="metric-val" style="color: #ff9100;">{cur_sym}{pivot_p:,.4f}</div></div>', unsafe_allow_html=True)
     sr3.markdown(f'<div class="metric-card"><div class="metric-label">Resistance (R1)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{resistance_1:,.4f}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.markdown("🌐 **Multi-Timeframe Trend Matrix:**")
-    mtf_data = [
-        {"Timeframe": "15 Minutes", "Trend": "Bullish" if price > curr_sar else "Bearish", "RSI": f"{curr_rsi:.1f}"},
-        {"Timeframe": "1 Hour", "Trend": "Bullish" if m_val > s_val else "Bearish", "RSI": f"{(curr_rsi + 2):.1f}"},
-        {"Timeframe": "Daily (1D)", "Trend": sig, "RSI": f"{(curr_rsi - 1):.1f}"}
-    ]
-    st.dataframe(pd.DataFrame(mtf_data), use_container_width=True)
-
     csv_data = df.to_csv().encode('utf-8')
-    st.download_button(label="📥 Download Chart Data as CSV", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
+    st.download_button(label="📥 Download CSV" if not is_urdu else "📥 سی ایس وی ڈاؤن لوڈ کریں", data=csv_data, file_name=f'{ticker}_data.csv', mime='text/csv')
 
     st.markdown("---")
-    st.markdown("📊 **Advanced Technical Metrics (with Parabolic SAR):**")
-    m1, m2, m3, m4 = st.columns(4)
-    m1.markdown(f'<div class="metric-card"><div class="metric-label">Parabolic SAR</div><div class="metric-val">{cur_sym}{curr_sar:,.2f}</div></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="metric-card"><div class="metric-label">RSI (14)</div><div class="metric-val">{curr_rsi:.1f}</div></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
-    m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
-
-    with st.expander("🏆 Signal Win/Loss Accuracy Tracker", expanded=False):
-        st.markdown("Recent trading signal performance and history log:")
-        st.dataframe(pd.DataFrame(st.session_state.signal_history), use_container_width=True)
-
-    with st.expander("💼 Paper Trading & Virtual Portfolio Tracker", expanded=False):
-        st.markdown("Add current asset to your virtual mock portfolio to track live profit/loss:")
-        col_p1, col_p2 = st.columns(2)
-        v_shares = col_p1.number_input("Number of Units/Shares:", min_value=1.0, value=100.0, step=10.0)
-        if col_p2.button("➕ Add to Portfolio"):
-            st.session_state.portfolio.append({"Asset": sel_name, "Shares": v_shares, "BuyPrice": price})
-            st.success(f"Added {v_shares} shares of {sel_name} at {cur_sym}{price:,.4f} to portfolio!")
-        
-        if st.session_state.portfolio:
-            st.markdown("📌 **Your Active Mock Positions:**")
-            port_df = pd.DataFrame(st.session_state.portfolio)
-            st.dataframe(port_df, use_container_width=True)
-            if st.button("🗑️ Clear Portfolio"):
-                st.session_state.portfolio = []
-                st.rerun()
-
-    with st.expander("⭐ User Feedback & Rating Box", expanded=False):
-        st.markdown("Rate your experience with PSX Trading Wizards:")
-        user_rating = st.slider("Select Stars:", 1, 5, 5)
-        user_review = st.text_area("Write your feedback or suggestions:")
-        if st.button("Submit Feedback"):
-            st.success("🎉 Thank you! Your feedback has been recorded successfully.")
-
-    st.markdown("---")
-    st.markdown("🎛️ **Chart Indicator Controls:**")
-    col_t1, col_t2, col_t3, col_t4 = st.columns(4)
-    show_ema20 = col_t1.checkbox("EMA 20", value=True)
-    show_ema50 = col_t2.checkbox("EMA 50", value=True)
-    show_upper_bb = col_t3.checkbox("Upper BB", value=True)
-    show_sar = col_t4.checkbox("Parabolic SAR", value=True)
-
-    st.subheader(f"📈 {sel_name} Interactive Candlestick Chart")
+    st.subheader("📈 Interactive Candlestick Chart" if not is_urdu else "📈 انٹرایکٹو کینڈل اسٹک چارٹ")
     fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price Candlestick", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
-    
-    if show_ema20:
-        fig.add_trace(go.Scatter(x=df.index, y=ema20, mode='lines', name='EMA 20', line=dict(color='#00e676', width=1)))
-    if show_ema50:
-        fig.add_trace(go.Scatter(x=df.index, y=ema50, mode='lines', name='EMA 50', line=dict(color='#58a6ff', width=1.5)))
-    if show_upper_bb:
-        fig.add_trace(go.Scatter(x=df.index, y=bb_upper, mode='lines', name='Upper BB', line=dict(color='#ff9100', width=1, dash='dash')))
-    if show_sar:
-        fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='Parabolic SAR', marker=dict(color='#00b0ff', size=5)))
-        
-    fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    fig.add_trace(go.Candlestick(x=df.index, open=open_p, high=high_p, low=low_p, close=close, name="Price", increasing_line_color='#00e676', decreasing_line_color='#ff1744'))
+    fig.add_trace(go.Scatter(x=df.index, y=psar, mode='markers', name='SAR', marker=dict(color='#00b0ff', size=5)))
+    fig.update_layout(template="plotly_dark" if is_dark else "plotly_white", paper_bgcolor=theme_bg, plot_bgcolor=card_bg, margin=dict(l=10, r=10, t=30, b=10), xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
