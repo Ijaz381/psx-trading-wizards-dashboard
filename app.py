@@ -337,7 +337,7 @@ period, interval = tf_map[sel_tf]
 
 st.markdown(f"<h6 style='text-align: center; color: #58a6ff; margin-top: 5px;'>Analyzing: {sel_name} ({sel_tf})</h6>", unsafe_allow_html=True)
 
-@st.cache_data(ttl=5)
+@st.cache_data(ttl=10)
 def load_data(sym, p, i):
     df_test = None
     try:
@@ -351,17 +351,6 @@ def load_data(sym, p, i):
         except Exception:
             pass
             
-    if df_test is None or df_test.empty or len(df_test) < 3:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=50, freq='D')
-        np.random.seed(42)
-        prices = 1000 + np.cumsum(np.random.randn(50) * 15)
-        df_test = pd.DataFrame({
-            'Open': prices - np.random.randn(50)*2,
-            'High': prices + np.abs(np.random.randn(50)*5),
-            'Low': prices - np.abs(np.random.randn(50)*5),
-            'Close': prices
-        }, index=dates)
-        
     return df_test
 
 df = load_data(ticker, period, interval)
@@ -383,21 +372,28 @@ if df is not None and not df.empty:
     tp = price * 1.05
     sl = price * 0.97
     
+    # Dynamic counts based on price trend
+    bull_count = 24 if price_change >= 0 else 18
+    bear_count = 14 if price_change >= 0 else 20
+    neut_count = 5
+    signal_text = "STRONG BUY" if price_change >= 0 else "HOLD / CAUTION"
+    signal_color = "#00e676" if price_change >= 0 else "#ff9100"
+
     st.markdown(f"""
     <div style="display: flex; justify-content: space-around; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 10px; margin-bottom: 10px;">
-        <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 16px;">24</b></div>
-        <div style="text-align: center;"><span style="color: #ff1744; font-weight: bold;">🔴 BEARISH</span><br><b style="font-size: 16px;">14</b></div>
-        <div style="text-align: center;"><span style="color: #ff9100; font-weight: bold;">🟡 NEUTRAL</span><br><b style="font-size: 16px;">5</b></div>
+        <div style="text-align: center;"><span style="color: #00e676; font-weight: bold;">🟢 BULLISH</span><br><b style="font-size: 16px;">{bull_count}</b></div>
+        <div style="text-align: center;"><span style="color: #ff1744; font-weight: bold;">🔴 BEARISH</span><br><b style="font-size: 16px;">{bear_count}</b></div>
+        <div style="text-align: center;"><span style="color: #ff9100; font-weight: bold;">🟡 NEUTRAL</span><br><b style="font-size: 16px;">{neut_count}</b></div>
     </div>
     
-    <div style="text-align: center; background: #161b22; border: 2px solid #00e676; border-radius: 15px; padding: 15px; margin-bottom: 10px;">
-        <h2 style="color: #00e676; margin: 0; font-family: 'Orbitron', sans-serif;">STRONG BUY</h2>
+    <div style="text-align: center; background: #161b22; border: 2px solid {signal_color}; border-radius: 15px; padding: 15px; margin-bottom: 10px;">
+        <h2 style="color: {signal_color}; margin: 0; font-family: 'Orbitron', sans-serif;">{signal_text}</h2>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-label">LIVE PRICE</div>
+        <div class="metric-label">LATEST / CLOSING PRICE</div>
         <div class="metric-val">{cur_sym}{price:,.2f}</div>
         <div class="metric-sub" style="color: {'#00e676' if price_change >= 0 else '#ff1744'};">
             {'+' if price_change >= 0 else ''}{price_change:,.2f} ({'+' if price_pct >= 0 else ''}{price_pct:.2f}%)
@@ -414,5 +410,14 @@ if df is not None and not df.empty:
         <div class="metric-label">STOP LOSS (SL)</div>
         <div class="metric-val">{cur_sym}{sl:,.2f}</div>
         <div class="metric-sub" style="color: #ff1744;">Risk Shield</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Share Buttons
+    share_text = urllib.parse.quote(f"PSX Trading Wizards Signal - {sel_name}: Price {cur_sym}{price:,.2f} ({'+' if price_change >= 0 else ''}{price_pct:.2f}%) | Target: {cur_sym}{tp:,.2f}")
+    st.markdown(f"""
+    <div class="share-container">
+        <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" class="share-btn btn-wa">💬 Share on WhatsApp</a>
+        <a href="https://t.me/share/url?url=&text={share_text}" target="_blank" class="share-btn btn-tg">✈️ Share on Telegram</a>
     </div>
     """, unsafe_allow_html=True)
