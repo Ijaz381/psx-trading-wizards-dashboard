@@ -187,26 +187,6 @@ for t_name, t_sym in symbols.items():
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
 
-# 🎙️ Voice Assistant Component
-st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice AI Assistant (Speak to Analyze Any Asset)</h6>" if not is_urdu else "<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ وائس اے آئی اسسٹنٹ (بول کر تجزیہ کروانا)</h6>", unsafe_allow_html=True)
-components.html("""
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-family: sans-serif;">
-    <button id="micBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 0 15px rgba(255, 145, 0, 0.6);">🎙️ Ask AI: 'Should I Buy or Sell HBL?'</button>
-    <div id="statusText" style="color: #58a6ff; font-size: 12px; font-weight: 600;">Click mic & ask for buy/sell advice</div>
-</div>
-<script>
-const micBtn = document.getElementById("micBtn");
-const statusText = document.getElementById("statusText");
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    micBtn.addEventListener("click", () => { recognition.start(); statusText.innerText = "Listening... Speak now!"; });
-    recognition.onresult = (event) => { statusText.innerText = "You asked: " + event.results[0][0].transcript; };
-}
-</script>
-""", height=75)
-
 search_label = "🔍 Type to Search Stock / Forex / Global Assets:" if not is_urdu else "🔍 اسٹاک یا فاریکس تلاش کرنے کے لیے لکھیں:"
 asset_label = "Select Market / Asset" if not is_urdu else "مارکیٹ یا اثاثہ منتخب کریں"
 tf_label = "Select Timeframe" if not is_urdu else "ٹائم فریم منتخب کریں"
@@ -320,7 +300,6 @@ if df is not None and not df.empty:
                 basic_upper.iloc[i] = basic_upper.iloc[i-1]
         st_line[i] = basic_lower.iloc[i] if supertrend[i] else basic_upper.iloc[i]
 
-    curr_supertrend = st_line[-1]
     is_bullish_st = supertrend[-1]
 
     price = manual_price_val if (use_manual_price and manual_price_val > 0) else (155.04 if ticker == "NBP.KA" else float(close.iloc[-1]))
@@ -362,34 +341,50 @@ if df is not None and not df.empty:
     <div class="signal-title" style="color: {col};">{sig}</div>
     ''', unsafe_allow_html=True)
 
+    # 🔊 RESTORED: Listen Signal Audio Button
+    safe_signal_text = f"Trading signal for {sel_name} is {sig}. Current price is {cur_sym}{price:,.4f}"
+    speak_html = f"""
+    <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
+        <button onclick="playSignal()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 24px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);">🔊 {"Listen Signal Audio" if not is_urdu else "سگنل آڈیو سنیں"}</button>
+    </div>
+    <script>
+    function playSignal() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance("{safe_signal_text}");
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }}
+    }}
+    </script>
+    """
+    components.html(speak_html, height=55)
+
     c1, c2, c3 = st.columns(3)
     chg_col = "#00e676" if price_change >= 0 else "#ff1744"
     c1.markdown(f'<div class="metric-card"><div class="metric-label">{"Price Used" if not is_urdu else "موجودہ قیمت"}</div><div class="metric-val">{cur_sym}{price:,.4f}</div><div class="metric-sub" style="color: {chg_col};">{price_change:+,.4f} ({pct_change:+.2f}%)</div></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><div class="metric-label">{"Target (TP)" if not is_urdu else "ٹارگٹ"}</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">{"Stop Loss (SL)" if not is_urdu else "اسٹاپ لاس"}</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
-    # 🤖 Interactive AI Voice Assistant (Buy or Sell Advice)
+    # 🎙️ FIXED: Interactive Voice Assistant with Live Speech Answer
     st.markdown("---")
-    ai_heading = "🤖 Interactive Voice AI Assistant (Buy / Sell Recommendation)" if not is_urdu else "🤖 انٹرایکٹو وائس اے آئی اسسٹنٹ (خریدیں یا بیچیں کا مشورہ)"
+    ai_heading = "🤖 Voice AI Assistant (Speak & Listen Buy/Sell Advice)" if not is_urdu else "🤖 وائس اے آئی اسسٹنٹ (بول کر مشورہ سنیں)"
     st.markdown(f"**{ai_heading}**")
     
-    ai_speech_advice = f"AI Assistant analysis for {sel_name}. Market trend is currently {sig}. The recommended action is to {recommendation}. Current price is {cur_sym}{price:,.2f} with Stop Loss at {cur_sym}{stop_loss:,.2f}."
+    ai_speech_advice = f"Analysis for {sel_name}. Signal is {sig}. Recommendation is {recommendation}. Live price is {cur_sym}{price:,.2f}."
     
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
-        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI RECOMMENDATION FOR {sel_name.upper()}</p>
+    voice_component_html = f"""
+    <div style="background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 18px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 20px rgba(0,230,118,0.15); font-family: sans-serif;">
+        <p style="font-size: 14px; color: #00e676; font-weight: bold; margin-bottom: 5px;">🤖 AI RECOMMENDATION: {sel_name.upper()}</p>
         <p style="font-size: 20px; font-weight: 900; color: {'#00e676' if recommendation=='BUY' else '#ff1744' if recommendation=='SELL' else '#ff9100'}; margin-bottom: 12px;">ACTION: {recommendation} ({sig})</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    ai_btn_html = f"""
-    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-        <button onclick="speakAIAdvice()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 12px 26px; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.6);">
-            🗣️ {"Listen AI Voice Advice (Buy or Sell?)" if not is_urdu else "اے آئی کی آواز میں مشورہ سنیں (خریدیں یا بیچیں؟)"}
-        </button>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button id="micAskBtn" style="background: linear-gradient(135deg, #ff9100, #ff3d00); color: #fff; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🎙️ Speak & Analyze</button>
+            <button onclick="speakAdvice()" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 13px;">🗣️ Listen AI Advice</button>
+        </div>
+        <p id="voiceStatus" style="color: #58a6ff; font-size: 12px; margin-top: 10px; font-weight: 600;"></p>
     </div>
     <script>
-    function speakAIAdvice() {{
+    function speakAdvice() {{
         if ('speechSynthesis' in window) {{
             window.speechSynthesis.cancel();
             var utterance = new SpeechSynthesisUtterance("{ai_speech_advice}");
@@ -397,9 +392,22 @@ if df is not None and not df.empty:
             window.speechSynthesis.speak(utterance);
         }}
     }}
+    const micAskBtn = document.getElementById("micAskBtn");
+    const voiceStatus = document.getElementById("voiceStatus");
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {{
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        micAskBtn.addEventListener("click", () => {{ recognition.start(); voiceStatus.innerText = "Listening... Speak your query!"; }});
+        recognition.onresult = (event) => {{ 
+            const userText = event.results[0][0].transcript;
+            voiceStatus.innerText = "You asked: " + userText;
+            speakAdvice(); 
+        }};
+    }}
     </script>
     """
-    components.html(ai_btn_html, height=60)
+    components.html(voice_component_html, height=155)
 
     # Advanced Institutional Indicators Row
     st.markdown("---")
