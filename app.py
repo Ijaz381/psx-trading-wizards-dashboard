@@ -333,13 +333,4 @@ symbols = {
     "UBL (United Bank Limited)": "UBL.KA"
 }
 
-logo_url = "https://i.postimg.cc/RC6D81jf/FB-IMG-1791701482397.jpg"
-
-st.markdown(f"""
-<div class="logo-header-container">
-    <img src="{logo_url}" class="logo-img" alt="PSX Logo">
-    <div class="animated-title">PSX Trading Wizards</div>
-    <div class="animated-author">By Ijaz Sardar</div>
-    <div class="header-info-strip">
-        <div class="header-badge" id="pktClock">🕒 Loading Pakistan Time...</div>
-        <a href
+logo_url =
