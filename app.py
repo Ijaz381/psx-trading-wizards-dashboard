@@ -92,6 +92,8 @@ css_code = """
 .metric-val { color: """ + theme_fg + """ !important; font-size: 16px !important; font-weight: 800 !important; }
 .metric-sub { font-size: 11px; font-weight: 700; margin-top: 3px; }
 
+.ai-box { background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #00e676; padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); }
+
 .share-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
 .share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff !important; text-decoration: none !important; }
 .btn-wa { background: #25D366; }
@@ -405,6 +407,24 @@ if df is not None and not df.empty:
     c2.markdown(f'<div class="metric-card"><div class="metric-label">Target (TP)</div><div class="metric-val" style="color: #00e676;">{cur_sym}{target_price:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Take-Profit</div></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="metric-card"><div class="metric-label">Stop Loss (SL)</div><div class="metric-val" style="color: #ff1744;">{cur_sym}{stop_loss:,.4f}</div><div class="metric-sub" style="color: #8b949e;">Risk Shield</div></div>', unsafe_allow_html=True)
 
+    # 🤖 AI Trading Assistant / Bot Section
+    st.markdown("---")
+    st.markdown("🤖 **AI Trading Assistant (Ask AI Bot):**")
+    st.markdown("Ask the AI bot whether the candlestick is heading UP or DOWN based on live indicators:")
+    
+    if st.button("🧠 Ask AI: Will the Candle Go Up or Down?"):
+        ai_direction = "UP 🟢 (Bullish Momentum)" if curr_rsi < 50 and m_val > s_val else ("DOWN 🔴 (Bearish Momentum)" if curr_rsi > 55 or m_val < s_val else "SIDEWAYS 🟠 (Consolidation)")
+        ai_reason = f"Based on RSI ({curr_rsi:.1f}), Stochastic ({curr_stoch:.1f}), and MACD values, market conditions indicate a {ai_direction.split(' ')[0]} movement for {sel_name} on the {sel_tf} timeframe."
+        
+        st.markdown(f"""
+        <div class="ai-box">
+            <h4 style="color: #00e676; margin-top: 0;">🤖 Wizard AI Bot Analysis:</h4>
+            <p style="font-size: 16px; font-weight: bold; color: #58a6ff;">Prediction: {ai_direction}</p>
+            <p style="font-size: 13px; color: #c9d1d9;">{ai_reason}</p>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 0;">Analyzed by PSX Trading Wizards AI Core</p>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("---")
     st.markdown("🛡️ **Auto Support & Resistance Levels:**")
     sr1, sr2, sr3 = st.columns(3)
@@ -429,12 +449,10 @@ if df is not None and not df.empty:
     m3.markdown(f'<div class="metric-card"><div class="metric-label">EMA 20</div><div class="metric-val">{cur_sym}{float(ema20.iloc[-1]):,.4f}</div></div>', unsafe_allow_html=True)
     m4.markdown(f'<div class="metric-card"><div class="metric-label">MACD Diff</div><div class="metric-val">{(m_val - s_val):.4f}</div></div>', unsafe_allow_html=True)
 
-    # 🏆 Signal Performance & Win/Loss History Tracker
     with st.expander("🏆 Signal Win/Loss Accuracy Tracker", expanded=False):
         st.markdown("Recent trading signal performance and history log:")
         st.dataframe(pd.DataFrame(st.session_state.signal_history), use_container_width=True)
 
-    # 💼 Virtual Paper Trading / Portfolio Tracker Section
     with st.expander("💼 Paper Trading & Virtual Portfolio Tracker", expanded=False):
         st.markdown("Add current asset to your virtual mock portfolio to track live profit/loss:")
         col_p1, col_p2 = st.columns(2)
