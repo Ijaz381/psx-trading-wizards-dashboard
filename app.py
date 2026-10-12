@@ -86,12 +86,12 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Live Ticker
+# Auto Refresh & Real-time Ticker Data
 ticker_html_items = ""
 for t_name, t_sym in symbols.items():
     try:
         t_obj = yf.Ticker(t_sym)
-        df_t = t_obj.history(period="3d", interval="1d")
+        df_t = t_obj.history(period="2d")
         if df_t is not None and not df_t.empty:
             cp = float(df_t['Close'].iloc[-1])
             pp = float(df_t['Close'].iloc[-2]) if len(df_t) > 1 else cp
@@ -108,7 +108,6 @@ for t_name, t_sym in symbols.items():
 if ticker_html_items:
     st.markdown(f'<div class="ticker-wrap"><div class="ticker">{ticker_html_items}{ticker_html_items}</div></div>', unsafe_allow_html=True)
 
-# Voice Search
 st.markdown("<h6 style='text-align: center; color: #00e676; margin-bottom: 5px;'>🎙️ Voice Search & Filter Share</h6>", unsafe_allow_html=True)
 components.html("""
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
@@ -137,22 +136,22 @@ sel_tf = st.selectbox("Select Timeframe", ["Daily (1D)", "Weekly (1W)", "1 Hour"
 
 ticker = symbols[sel_name]
 
-@st.cache_data(ttl=10)
-def load_data(sym):
+# No-Cache Live Data Fetcher for Auto-Update
+def load_live_data(sym):
     try:
         t_obj = yf.Ticker(sym)
-        df_test = t_obj.history(period="30d", interval="1d")
+        df_test = t_obj.history(period="1mo", interval="1d")
     except Exception:
         df_test = None
         
-    if sym == "NBP.KA" or df_test is None or df_test.empty:
+    if df_test is None or df_test.empty:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=30, freq='D')
         base_p = 155.04 if sym == "NBP.KA" else 150.0
         prices = base_p + np.cumsum(np.random.randn(30) * 0.4)
         df_test = pd.DataFrame({'Open': prices-0.4, 'High': prices+1.0, 'Low': prices-1.0, 'Close': prices}, index=dates)
     return df_test
 
-df = load_data(ticker)
+df = load_live_data(ticker)
 
 if df is not None and not df.empty:
     close = df['Close']
